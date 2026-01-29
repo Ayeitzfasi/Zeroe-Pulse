@@ -1,19 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import Link from 'next/link';
+import { AppLayout } from '@/components/layout';
 import { api } from '@/lib/api';
 
-function ChangePasswordContent() {
+export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,29 +48,24 @@ function ChangePasswordContent() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-2 w-12 bg-zeroe-gradient rounded-full" />
-            <h1 className="text-xl font-heading font-bold text-charcoal">
-              Pulse AI
-            </h1>
-          </div>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-sm text-zeroe-blue hover:text-zeroe-blue-dark transition-colors"
+    <AppLayout>
+      <div className="max-w-md">
+        <div className="mb-6">
+          <Link
+            href="/settings"
+            className="text-sm text-zeroe-blue hover:text-zeroe-blue-dark flex items-center gap-1"
           >
-            Back to Dashboard
-          </button>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Settings
+          </Link>
         </div>
-      </header>
 
-      <div className="max-w-md mx-auto px-4 py-8">
         <div className="card">
-          <h2 className="text-xl font-heading font-bold text-charcoal mb-6">
+          <h1 className="text-xl font-heading font-bold text-charcoal mb-6">
             Change Password
-          </h2>
+          </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -149,14 +142,6 @@ function ChangePasswordContent() {
           </form>
         </div>
       </div>
-    </main>
-  );
-}
-
-export default function ChangePasswordPage() {
-  return (
-    <ProtectedRoute>
-      <ChangePasswordContent />
-    </ProtectedRoute>
+    </AppLayout>
   );
 }

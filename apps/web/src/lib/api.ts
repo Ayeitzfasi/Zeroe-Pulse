@@ -1,4 +1,4 @@
-import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest } from '@zeroe-pulse/shared';
+import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest, Deal, DealListParams, DealListResponse, DealStage } from '@zeroe-pulse/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -94,6 +94,52 @@ class ApiClient {
     return this.request<UserApiKeys>('/auth/api-keys', {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Deals API
+  async getDeals(params: DealListParams = {}): Promise<ApiResponse<DealListResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.limit) searchParams.set('limit', String(params.limit));
+    if (params.stage) searchParams.set('stage', params.stage);
+    if (params.search) searchParams.set('search', params.search);
+    if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+
+    const query = searchParams.toString();
+    return this.request<DealListResponse>(`/deals${query ? `?${query}` : ''}`);
+  }
+
+  async getDeal(id: string): Promise<ApiResponse<Deal>> {
+    return this.request<Deal>(`/deals/${id}`);
+  }
+
+  async getDealStats(): Promise<ApiResponse<{
+    total: number;
+    byStage: Record<DealStage, number>;
+    totalValue: number;
+  }>> {
+    return this.request<{
+      total: number;
+      byStage: Record<DealStage, number>;
+      totalValue: number;
+    }>('/deals/stats');
+  }
+
+  async syncDeals(): Promise<ApiResponse<{
+    message: string;
+    totalFetched: number;
+    created: number;
+    updated: number;
+  }>> {
+    return this.request<{
+      message: string;
+      totalFetched: number;
+      created: number;
+      updated: number;
+    }>('/deals/sync', {
+      method: 'POST',
     });
   }
 }

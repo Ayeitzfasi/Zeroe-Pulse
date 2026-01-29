@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler.js';
 import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
+import dealsRoutes from './routes/deals.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 // Routes
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
+app.use('/deals', dealsRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -4,6 +4,53 @@
 
 ---
 
+## [0.4.0] - 2026-01-30 (Phase 3 Complete - Deals Feature)
+
+### Added
+- **Database**
+  - `003_deals.sql` migration with deals table
+  - `deal_stage` enum type (qualified, discovery, demo, proposal, negotiation, closed_won, closed_lost)
+  - Indexes for performance on hubspot_id, stage, company_name, close_date, updated_at
+
+- **HubSpot Integration**
+  - `apps/api/src/integrations/hubspot.ts` - HubSpot API client
+  - Fetch all deals with pagination
+  - Normalize HubSpot deals to app format
+  - Fetch associated companies and owners
+  - Stage mapping from HubSpot to app stages
+
+- **Deals API**
+  - `GET /deals` - List deals with pagination, filtering, sorting
+  - `GET /deals/:id` - Get single deal by ID
+  - `GET /deals/stats` - Get deal statistics by stage
+  - `POST /deals/sync` - Sync deals from HubSpot
+  - Support for user's personal HubSpot API key or env fallback
+
+- **Deals Service**
+  - `apps/api/src/services/dealService.ts` - Database operations
+  - findAll with pagination, search, stage filter, sorting
+  - findById, findByHubspotId
+  - upsertFromHubSpot for sync operations
+  - getStats for dashboard metrics
+
+- **Web Platform**
+  - `/deals` - Deals list page with full-featured table
+    - Search by deal name or company
+    - Filter by stage
+    - Sort by name, amount, close date, updated date
+    - Pagination with 25/50/100 options
+    - Sync from HubSpot button with loading state
+  - `/deals/[id]` - Deal detail page
+    - Deal information display
+    - Quick info sidebar
+    - Link to view in HubSpot
+    - Placeholders for AI analysis and chat (Phase 5/8)
+
+- **API Client**
+  - Added getDeals, getDeal, getDealStats, syncDeals methods
+
+---
+
 ## [0.3.0] - 2026-01-30 (Phase 2 Complete + API Keys)
 
 ### Added
@@ -173,6 +220,7 @@ When requesting changes, please use this format:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.4.0 | 2026-01-30 | Phase 3 Complete - Deals Feature with HubSpot Integration |
 | 0.3.0 | 2026-01-30 | Phase 2 Complete + API Keys Management |
 | 0.2.0 | 2026-01-30 | Phase 1 Complete - Authentication System |
 | 0.1.0 | 2026-01-30 | Phase 0 Complete - Project Foundation |

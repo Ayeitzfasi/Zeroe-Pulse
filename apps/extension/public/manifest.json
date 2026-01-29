@@ -9,7 +9,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://app.hubspot.com/*"
+    "https://app.hubspot.com/*",
+    "http://localhost:3000/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -19,6 +20,10 @@
     {
       "matches": ["https://app.hubspot.com/*"],
       "js": ["content.js"]
+    },
+    {
+      "matches": ["http://localhost:3000/*"],
+      "js": ["web-platform.js"]
     }
   ],
   "side_panel": {

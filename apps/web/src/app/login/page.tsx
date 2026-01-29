@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,19 +10,40 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // TODO: Implement actual login in Phase 1
-    console.log('Login attempt:', { email });
+    const result = await login(email, password);
 
-    setTimeout(() => {
+    if (result.success) {
+      router.push('/dashboard');
+    } else {
+      setError(result.error || 'Login failed');
       setIsLoading(false);
-      setError('Authentication not yet implemented');
-    }, 1000);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="h-2 w-32 bg-zeroe-gradient rounded-full mb-4 mx-auto animate-pulse" />
+          <p className="text-slate-blue">Loading...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">

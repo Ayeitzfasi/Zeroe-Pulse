@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface HubSpotContext {
   type: 'deal' | 'contact' | 'company' | null;
@@ -6,26 +6,51 @@ interface HubSpotContext {
   name: string | null;
 }
 
+const WEB_URL = 'http://localhost:3000';
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [context, setContext] = useState<HubSpotContext | null>(null);
 
-  useEffect(() => {
-    // Check authentication status
+  const checkAuth = useCallback(() => {
     chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' }, (response) => {
       setIsAuthenticated(!!response?.token);
+      setIsLoading(false);
     });
+  }, []);
 
-    // Listen for context updates
-    const listener = (message: { type: string; context?: HubSpotContext }) => {
+  useEffect(() => {
+    checkAuth();
+
+    // Listen for context updates and auth changes
+    const listener = (message: { type: string; context?: HubSpotContext; token?: string }) => {
       if (message.type === 'HUBSPOT_CONTEXT_UPDATE' && message.context) {
         setContext(message.context);
+      }
+      if (message.type === 'AUTH_TOKEN_UPDATED') {
+        setIsAuthenticated(!!message.token);
       }
     };
 
     chrome.runtime.onMessage.addListener(listener);
     return () => chrome.runtime.onMessage.removeListener(listener);
-  }, []);
+  }, [checkAuth]);
+
+  const handleSignOut = () => {
+    chrome.runtime.sendMessage({ type: 'CLEAR_AUTH_TOKEN' }, () => {
+      setIsAuthenticated(false);
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
+        <div className="h-1.5 w-24 bg-zeroe-gradient rounded-full mb-4 animate-pulse" />
+        <p className="text-slate-blue text-sm">Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -35,16 +60,19 @@ export default function App() {
           Zeroe Pulse AI
         </h1>
         <p className="text-slate-blue text-sm text-center mb-4">
-          Please sign in to use the extension
+          Sign in to use the extension
         </p>
         <a
-          href="http://localhost:3000/login"
+          href={`${WEB_URL}/login?extension=true`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary text-sm"
         >
           Sign In
         </a>
+        <p className="text-xs text-slate-400 mt-4 text-center px-4">
+          After signing in, click "Sync to Extension" on the dashboard
+        </p>
       </div>
     );
   }
@@ -53,11 +81,19 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 p-3">
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-8 bg-zeroe-gradient rounded-full" />
-          <span className="font-heading font-bold text-charcoal">
-            Pulse AI
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-8 bg-zeroe-gradient rounded-full" />
+            <span className="font-heading font-bold text-charcoal">
+              Pulse AI
+            </span>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="text-xs text-coral hover:text-coral/80"
+          >
+            Sign Out
+          </button>
         </div>
         {context?.name && (
           <div className="mt-2 text-sm text-slate-blue">

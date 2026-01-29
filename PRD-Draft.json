@@ -1,0 +1,710 @@
+{
+  "metadata": {
+    "projectName": "Zeroe Pulse AI",
+    "version": "1.0",
+    "lastUpdated": "2026-01-30",
+    "owners": ["Zeroe.io"],
+    "type": "Internal tool (web platform + Chrome extension)",
+    "mvpScope": true
+  },
+  "branch": {
+    "recommended": "mvp/zeroe-pulse-ai",
+    "releaseTag": "v1.0.0-mvp"
+  },
+  "description": {
+    "oneLine": "An internal dashboard and HubSpot sidebar that consolidates HubSpot + Confluence + meeting transcripts into a contextual AI assistant with reusable Claude Skills and deal intelligence.",
+    "problem": "Sales engagement context is fragmented across HubSpot, Confluence, and meeting transcripts, requiring manual searching and synthesis per deal/contact.",
+    "solution": "Provide a unified AI chat experience in a web platform and HubSpot sidebar extension, backed by a shared API that syncs and enriches HubSpot deals with AI-generated BANT/MEDIC analysis and supports user-created reusable Skills."
+  },
+  "personas": [
+    {
+      "id": "persona_sales_rep",
+      "name": "Sales Team Member",
+      "primaryGoals": [
+        "Get complete deal context fast",
+        "Draft follow-ups and proposals",
+        "Run reusable workflows via skills"
+      ],
+      "surfaces": ["Chrome extension", "Web platform"]
+    },
+    {
+      "id": "persona_delivery",
+      "name": "Delivery Team Member",
+      "primaryGoals": [
+        "Perform sales-to-delivery handovers",
+        "Understand requirements and risks quickly"
+      ],
+      "surfaces": ["Chrome extension", "Web platform"]
+    },
+    {
+      "id": "persona_marketing",
+      "name": "Marketing Team Member",
+      "primaryGoals": [
+        "Extract client insights from deal history",
+        "Understand objections and value drivers"
+      ],
+      "surfaces": ["Web platform"]
+    },
+    {
+      "id": "persona_ceo",
+      "name": "CEO / Leadership",
+      "primaryGoals": [
+        "Monitor pipeline health",
+        "Review AI deal analysis and risks",
+        "Ask questions across all sources"
+      ],
+      "surfaces": ["Web platform"]
+    }
+  ],
+  "rolesAndAccess": {
+    "model": "Single shared workspace; no teams/workspaces; no RBAC in MVP.",
+    "signup": "No public signup; accounts are created by an admin out-of-band.",
+    "skillVisibility": ["private (creator-only)", "shared (visible to all users)"]
+  },
+  "inScopeMVP": [
+    "Web platform (Next.js) for auth, deals list/detail with AI analysis, AI chat, skills CRUD and AI-assisted skill creation, chat history, settings (tokens + prefs), sync status + manual sync",
+    "Chrome extension (Manifest V3 side panel) for contextual chat inside HubSpot (deal/contact/company), skill invocation, quick actions, sync status, login state",
+    "Backend API (Node/Express) with Supabase Postgres storage and JWT auth, integrations (HubSpot, Confluence, Claude API), scheduled daily sync + manual sync",
+    "Security: token encryption at rest, rate limiting, input validation, strict CORS, minimal extension permissions"
+  ],
+  "outOfScope": [
+    "Teams/workspaces management",
+    "Billing/payments",
+    "User role management (RBAC)",
+    "Skill marketplace outside the org",
+    "Firefox/Safari/Edge support",
+    "Mobile app",
+    "Advanced analytics dashboards (token analytics is optional / nice-to-have)"
+  ],
+  "coreEntities": {
+    "User": {
+      "fields": [
+        "id (UUID)",
+        "email (unique)",
+        "passwordHash (bcrypt)",
+        "name",
+        "mustChangePassword (boolean)",
+        "hubspotTokenEncrypted (optional)",
+        "confluenceTokenEncrypted (optional)",
+        "anthropicApiKeyEncrypted (optional)",
+        "preferences.defaultDataSources (array)",
+        "createdAt",
+        "updatedAt",
+        "lastLoginAt"
+      ]
+    },
+    "Skill": {
+      "fields": [
+        "id (UUID)",
+        "creatorId (UUID)",
+        "name",
+        "description",
+        "prompt",
+        "dataSources (hubspot|confluence|transcripts)",
+        "visibility (private|shared)",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Deal": {
+      "fields": [
+        "id (UUID internal)",
+        "hubspotId (string)",
+        "name",
+        "companyName",
+        "companyHubspotId",
+        "value",
+        "currency",
+        "stage",
+        "ownerId",
+        "ownerName",
+        "discoveryCallDate (optional)",
+        "demoDate (optional)",
+        "lastActivityAt",
+        "hubspotCreatedAt",
+        "analysis (DealAnalysis JSON)",
+        "lastSyncedAt"
+      ]
+    },
+    "DealAnalysis": {
+      "schema": [
+        "overallHealth (green|yellow|red)",
+        "bantScore.budget.score + summary",
+        "bantScore.authority.score + summary",
+        "bantScore.need.score + summary",
+        "bantScore.timeline.score + summary",
+        "medicScore.metrics.score + summary",
+        "medicScore.economicBuyer.score + summary",
+        "medicScore.decisionCriteria.score + summary",
+        "medicScore.decisionProcess.score + summary",
+        "medicScore.identifyPain.score + summary",
+        "medicScore.champion.score + summary",
+        "nextSteps (string[])",
+        "risks (string[])",
+        "generatedAt"
+      ]
+    },
+    "Conversation": {
+      "fields": [
+        "id (UUID)",
+        "userId (UUID)",
+        "title",
+        "contextType (deal|general|skill_creation)",
+        "contextId (optional; dealId)",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Message": {
+      "fields": [
+        "id (UUID)",
+        "conversationId (UUID)",
+        "role (user|assistant)",
+        "content",
+        "metadata.skillId (optional)",
+        "metadata.dataSources (optional)",
+        "metadata.tokenCount (optional)",
+        "createdAt"
+      ]
+    },
+    "SyncLog": {
+      "fields": [
+        "id (UUID)",
+        "type (scheduled|manual)",
+        "status (running|completed|failed)",
+        "dealsProcessed",
+        "errors (optional)",
+        "startedAt",
+        "completedAt (optional)"
+      ]
+    }
+  },
+  "apiContract": {
+    "baseUrl": {
+      "development": "http://localhost:3000/api",
+      "production": "https://api.pulse.zeroe.io/api"
+    },
+    "authHeader": "Authorization: Bearer <jwt_token>",
+    "endpoints": [
+      { "method": "POST", "path": "/auth/login", "notes": "Email/password login; returns token and mustChangePassword flag." },
+      { "method": "POST", "path": "/auth/login/google", "notes": "Google OAuth credential exchange." },
+      { "method": "POST", "path": "/auth/login/outlook", "notes": "Outlook OAuth code exchange." },
+      { "method": "POST", "path": "/auth/change-password", "notes": "First login password change and subsequent password changes." },
+      { "method": "POST", "path": "/auth/logout", "notes": "Client-side token clearing; server may blacklist in future." },
+      { "method": "GET", "path": "/auth/me", "notes": "Returns current user profile." },
+      { "method": "GET", "path": "/deals", "notes": "Pagination, filtering, sorting." },
+      { "method": "GET", "path": "/deals/:id", "notes": "Deal + analysis + relevant timeline context payload." },
+      { "method": "POST", "path": "/deals/sync", "notes": "Manual sync trigger; returns syncLogId." },
+      { "method": "GET", "path": "/deals/sync/status", "notes": "Most recent sync log." },
+      { "method": "GET", "path": "/skills", "notes": "Visibility filter (private/shared/all)." },
+      { "method": "GET", "path": "/skills/:id", "notes": "Skill detail." },
+      { "method": "POST", "path": "/skills", "notes": "Create skill." },
+      { "method": "PUT", "path": "/skills/:id", "notes": "Update skill (creator-only mutability enforced for private/shared ownership)." },
+      { "method": "DELETE", "path": "/skills/:id", "notes": "Delete skill (creator-only)." },
+      { "method": "GET", "path": "/conversations", "notes": "List conversations; filter by context type." },
+      { "method": "GET", "path": "/conversations/:id", "notes": "Conversation + messages." },
+      { "method": "POST", "path": "/conversations", "notes": "Create conversation for a context (deal/general/skill_creation)." },
+      { "method": "POST", "path": "/conversations/:id/messages", "notes": "Send message; optionally invoke a skill; saves user + assistant messages." },
+      { "method": "DELETE", "path": "/conversations/:id", "notes": "Deletes conversation (owner-only)." },
+      { "method": "GET", "path": "/settings/tokens", "notes": "Returns booleans indicating token presence." },
+      { "method": "PUT", "path": "/settings/tokens", "notes": "Stores encrypted HubSpot/Confluence/Anthropic tokens." },
+      { "method": "PUT", "path": "/settings/preferences", "notes": "Stores preferences like default data sources." }
+    ],
+    "extensionContextEndpoints": [
+      { "method": "GET", "path": "/context/deal/:hubspotId", "notes": "For extension; returns deal and recent messages." },
+      { "method": "GET", "path": "/context/contact/:hubspotId", "notes": "For extension; returns contact summary, related deals, recent messages." },
+      { "method": "GET", "path": "/context/company/:hubspotId", "notes": "For extension; returns company summary, deals, contacts, recent messages." }
+    ]
+  },
+  "userStories": [
+    {
+      "id": "US-001",
+      "priority": 1,
+      "role": "Team member",
+      "want": "log in with email and password",
+      "soThat": "I can access the platform and extension",
+      "acceptanceCriteria": [
+        { "id": "AC-001-01", "priority": 1, "criterion": "The login page renders email and password inputs and a Log In button.", "pass": false, "notes": "" },
+        { "id": "AC-001-02", "priority": 1, "criterion": "Submitting valid credentials returns an authenticated session token to the client.", "pass": false, "notes": "" },
+        { "id": "AC-001-03", "priority": 1, "criterion": "Submitting invalid credentials shows an error state without revealing whether the email exists.", "pass": false, "notes": "" },
+        { "id": "AC-001-04", "priority": 1, "criterion": "After successful login, the user is redirected to /deals.", "pass": false, "notes": "" },
+        { "id": "AC-001-05", "priority": 1, "criterion": "The backend rejects login requests missing email or password with a 400 response.", "pass": false, "notes": "" },
+        { "id": "AC-001-06", "priority": 1, "criterion": "The backend rate-limits repeated failed login attempts per user or IP and returns 429 when exceeded.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-002",
+      "priority": 1,
+      "role": "Team member",
+      "want": "log in using Google or Outlook OAuth",
+      "soThat": "I can authenticate without a password",
+      "acceptanceCriteria": [
+        { "id": "AC-002-01", "priority": 1, "criterion": "The login page renders a Log in with Google button.", "pass": false, "notes": "" },
+        { "id": "AC-002-02", "priority": 1, "criterion": "The login page renders a Log in with Outlook button.", "pass": false, "notes": "" },
+        { "id": "AC-002-03", "priority": 1, "criterion": "Completing Google OAuth returns a platform session token.", "pass": false, "notes": "" },
+        { "id": "AC-002-04", "priority": 1, "criterion": "Completing Outlook OAuth returns a platform session token.", "pass": false, "notes": "" },
+        { "id": "AC-002-05", "priority": 1, "criterion": "If OAuth exchange fails, the UI shows a generic authentication error and allows retry.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-003",
+      "priority": 1,
+      "role": "Newly onboarded user",
+      "want": "be forced to change my temporary password on first login",
+      "soThat": "my account is secured before I proceed",
+      "acceptanceCriteria": [
+        { "id": "AC-003-01", "priority": 1, "criterion": "If mustChangePassword is true after login, the user is redirected to /change-password.", "pass": false, "notes": "" },
+        { "id": "AC-003-02", "priority": 1, "criterion": "The change password form validates that the new password has at least 12 characters.", "pass": false, "notes": "" },
+        { "id": "AC-003-03", "priority": 1, "criterion": "The change password form validates that the new password includes uppercase, lowercase, number, and special character.", "pass": false, "notes": "" },
+        { "id": "AC-003-04", "priority": 1, "criterion": "The change password form validates that confirm password matches the new password.", "pass": false, "notes": "" },
+        { "id": "AC-003-05", "priority": 1, "criterion": "Submitting a valid password change updates the stored password hash and clears mustChangePassword.", "pass": false, "notes": "" },
+        { "id": "AC-003-06", "priority": 1, "criterion": "If current password is incorrect, the API returns 401 and the UI shows an error without logging the plaintext password.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-004",
+      "priority": 1,
+      "role": "Authenticated user",
+      "want": "navigate a consistent app layout",
+      "soThat": "I can move between Deals, Skills, History, and Settings",
+      "acceptanceCriteria": [
+        { "id": "AC-004-01", "priority": 1, "criterion": "Authenticated pages render a sidebar with navigation links to Deals, Skills, History, and Settings.", "pass": false, "notes": "" },
+        { "id": "AC-004-02", "priority": 1, "criterion": "Authenticated pages render a header that displays sync status and a user menu.", "pass": false, "notes": "" },
+        { "id": "AC-004-03", "priority": 1, "criterion": "Attempting to access an authenticated route without a valid token redirects to /login.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-005",
+      "priority": 1,
+      "role": "Team member",
+      "want": "view a paginated list of HubSpot deals with filters and sorting",
+      "soThat": "I can find and prioritize deals quickly",
+      "acceptanceCriteria": [
+        { "id": "AC-005-01", "priority": 1, "criterion": "The Deals page renders a table containing deal name, company, value, stage, discovery call, demo, last activity, and BANT score columns.", "pass": false, "notes": "" },
+        { "id": "AC-005-02", "priority": 1, "criterion": "The Deals page provides a stage filter dropdown that updates the results.", "pass": false, "notes": "" },
+        { "id": "AC-005-03", "priority": 1, "criterion": "The Deals page provides a search input that filters by deal name or company name.", "pass": false, "notes": "" },
+        { "id": "AC-005-04", "priority": 1, "criterion": "The Deals page provides a date range filter for created date or last activity.", "pass": false, "notes": "" },
+        { "id": "AC-005-05", "priority": 1, "criterion": "Clicking a sortable column header toggles sort order and refreshes the list.", "pass": false, "notes": "" },
+        { "id": "AC-005-06", "priority": 1, "criterion": "The Deals list supports pagination with selectable page size 25/50/100.", "pass": false, "notes": "" },
+        { "id": "AC-005-07", "priority": 1, "criterion": "Clicking a deal row navigates to /deals/:dealId.", "pass": false, "notes": "" },
+        { "id": "AC-005-08", "priority": 1, "criterion": "If the deals API returns an error, the UI shows a retry action and does not crash.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-006",
+      "priority": 1,
+      "role": "Team member",
+      "want": "view a deal detail page with AI analysis and a contextual chat panel",
+      "soThat": "I can understand deal health and ask questions with full context",
+      "acceptanceCriteria": [
+        { "id": "AC-006-01", "priority": 1, "criterion": "The Deal Detail page displays deal name, company name, value, stage, owner, and last activity.", "pass": false, "notes": "" },
+        { "id": "AC-006-02", "priority": 1, "criterion": "The Deal Detail page renders an overall health indicator with values green, yellow, or red.", "pass": false, "notes": "" },
+        { "id": "AC-006-03", "priority": 1, "criterion": "The Deal Detail page displays BANT Budget score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-04", "priority": 1, "criterion": "The Deal Detail page displays BANT Authority score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-05", "priority": 1, "criterion": "The Deal Detail page displays BANT Need score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-06", "priority": 1, "criterion": "The Deal Detail page displays BANT Timeline score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-07", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Metrics score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-08", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Economic Buyer score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-09", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Decision Criteria score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-10", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Decision Process score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-11", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Identify Pain score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-12", "priority": 1, "criterion": "The Deal Detail page displays MEDIC Champion score and summary.", "pass": false, "notes": "" },
+        { "id": "AC-006-13", "priority": 1, "criterion": "The Deal Detail page displays a list of AI-generated next steps.", "pass": false, "notes": "" },
+        { "id": "AC-006-14", "priority": 1, "criterion": "The Deal Detail page displays a list of AI-identified risks.", "pass": false, "notes": "" },
+        { "id": "AC-006-15", "priority": 1, "criterion": "The Deal Detail page renders a timeline section including discovery call and demo dates when present.", "pass": false, "notes": "" },
+        { "id": "AC-006-16", "priority": 1, "criterion": "The Deal Detail page renders a chat panel that is pre-associated with the deal context.", "pass": false, "notes": "" },
+        { "id": "AC-006-17", "priority": 1, "criterion": "The chat panel renders suggested prompts for the current deal.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-007",
+      "priority": 1,
+      "role": "Team member",
+      "want": "chat with an AI assistant that uses HubSpot, Confluence, and transcripts context",
+      "soThat": "I can get consolidated answers without searching manually",
+      "acceptanceCriteria": [
+        { "id": "AC-007-01", "priority": 1, "criterion": "Sending a message creates and stores a user message record in the database.", "pass": false, "notes": "" },
+        { "id": "AC-007-02", "priority": 1, "criterion": "The backend assembles context from the selected data sources before calling the AI model.", "pass": false, "notes": "" },
+        { "id": "AC-007-03", "priority": 1, "criterion": "The backend stores the assistant response as a message record linked to the conversation.", "pass": false, "notes": "" },
+        { "id": "AC-007-04", "priority": 1, "criterion": "The UI renders assistant messages with markdown formatting.", "pass": false, "notes": "" },
+        { "id": "AC-007-05", "priority": 1, "criterion": "If the AI provider returns an error, the UI shows an error state and provides a retry action.", "pass": false, "notes": "" },
+        { "id": "AC-007-06", "priority": 1, "criterion": "If assembled context exceeds the configured token budget, the backend truncates or summarizes older context before requesting a response.", "pass": false, "notes": "" },
+        { "id": "AC-007-07", "priority": 1, "criterion": "The message metadata stores which data sources were used for that assistant response.", "pass": false, "notes": "" },
+        { "id": "AC-007-08", "priority": 1, "criterion": "The message metadata stores an estimated token count for the AI request/response.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-008",
+      "priority": 1,
+      "role": "Team member",
+      "want": "browse and manage reusable skills",
+      "soThat": "I can standardize and automate workflows",
+      "acceptanceCriteria": [
+        { "id": "AC-008-01", "priority": 1, "criterion": "The Skills page lists skills with name, truncated description, visibility badge, created date, and creator name for shared skills.", "pass": false, "notes": "" },
+        { "id": "AC-008-02", "priority": 1, "criterion": "The Skills page provides tabs or filters for All Skills, My Skills, and Shared Skills.", "pass": false, "notes": "" },
+        { "id": "AC-008-03", "priority": 1, "criterion": "Clicking Add New Skill navigates to /skills/new.", "pass": false, "notes": "" },
+        { "id": "AC-008-04", "priority": 1, "criterion": "If a user has no skills, the Skills page shows an empty state with an action to create a skill.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-009",
+      "priority": 1,
+      "role": "Team member",
+      "want": "create a skill with a prompt, data sources, and visibility",
+      "soThat": "I can invoke it later in chat",
+      "acceptanceCriteria": [
+        { "id": "AC-009-01", "priority": 1, "criterion": "The New Skill page provides inputs for skill name, description, and prompt.", "pass": false, "notes": "" },
+        { "id": "AC-009-02", "priority": 1, "criterion": "The New Skill page provides checkboxes for HubSpot, Confluence, and Call Transcripts data sources.", "pass": false, "notes": "" },
+        { "id": "AC-009-03", "priority": 1, "criterion": "The New Skill page provides a visibility toggle with values Private and Shared.", "pass": false, "notes": "" },
+        { "id": "AC-009-04", "priority": 1, "criterion": "Submitting the create form calls POST /skills and shows success state on completion.", "pass": false, "notes": "" },
+        { "id": "AC-009-05", "priority": 1, "criterion": "If required fields are missing, the UI blocks submission and highlights the missing fields.", "pass": false, "notes": "" },
+        { "id": "AC-009-06", "priority": 1, "criterion": "The backend rejects skill creation if the prompt field is empty.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-010",
+      "priority": 1,
+      "role": "Team member",
+      "want": "edit or delete my skills",
+      "soThat": "I can maintain my workflows over time",
+      "acceptanceCriteria": [
+        { "id": "AC-010-01", "priority": 1, "criterion": "The Skill Detail page loads and displays the selected skill fields.", "pass": false, "notes": "" },
+        { "id": "AC-010-02", "priority": 1, "criterion": "Updating skill fields and clicking Save Changes calls PUT /skills/:id and persists updates.", "pass": false, "notes": "" },
+        { "id": "AC-010-03", "priority": 1, "criterion": "Deleting a skill requires a confirmation step before calling DELETE /skills/:id.", "pass": false, "notes": "" },
+        { "id": "AC-010-04", "priority": 1, "criterion": "The backend returns 403 when a user attempts to edit a skill they did not create.", "pass": false, "notes": "" },
+        { "id": "AC-010-05", "priority": 1, "criterion": "The backend returns 403 when a user attempts to delete a skill they did not create.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-011",
+      "priority": 1,
+      "role": "Team member",
+      "want": "invoke a skill during chat",
+      "soThat": "the AI response follows a reusable workflow",
+      "acceptanceCriteria": [
+        { "id": "AC-011-01", "priority": 1, "criterion": "The chat send action supports including a skillId for a message.", "pass": false, "notes": "" },
+        { "id": "AC-011-02", "priority": 1, "criterion": "When skillId is provided, the backend uses the skill prompt as part of the AI request instructions.", "pass": false, "notes": "" },
+        { "id": "AC-011-03", "priority": 1, "criterion": "The stored assistant message metadata includes the skillId used to generate the response.", "pass": false, "notes": "" },
+        { "id": "AC-011-04", "priority": 1, "criterion": "If the referenced skill does not exist or is not accessible, the backend returns 404 or 403 and no AI request is made.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-012",
+      "priority": 1,
+      "role": "Team member",
+      "want": "use AI assistance to create or refine a skill",
+      "soThat": "I can generate high-quality prompts faster",
+      "acceptanceCriteria": [
+        { "id": "AC-012-01", "priority": 1, "criterion": "The New Skill page renders an AI chat panel dedicated to skill creation context.", "pass": false, "notes": "" },
+        { "id": "AC-012-02", "priority": 1, "criterion": "During skill creation chat, the assistant can ask clarifying questions before proposing a skill definition.", "pass": false, "notes": "" },
+        { "id": "AC-012-03", "priority": 1, "criterion": "When the assistant proposes changes, the UI offers an Apply Suggestion action.", "pass": false, "notes": "" },
+        { "id": "AC-012-04", "priority": 1, "criterion": "Clicking Apply Suggestion updates the skill form fields without saving to the backend automatically.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-013",
+      "priority": 1,
+      "role": "Team member",
+      "want": "view and search my chat history",
+      "soThat": "I can revisit prior conversations and continue them",
+      "acceptanceCriteria": [
+        { "id": "AC-013-01", "priority": 1, "criterion": "The History page lists conversations with title, last message preview, date/time, and context badge.", "pass": false, "notes": "" },
+        { "id": "AC-013-02", "priority": 1, "criterion": "The History page provides a keyword search input that filters conversations.", "pass": false, "notes": "" },
+        { "id": "AC-013-03", "priority": 1, "criterion": "The History page provides a date range filter that filters conversations.", "pass": false, "notes": "" },
+        { "id": "AC-013-04", "priority": 1, "criterion": "The History page provides a context type filter (Deal, General, Skill Creation).", "pass": false, "notes": "" },
+        { "id": "AC-013-05", "priority": 1, "criterion": "Selecting a conversation opens its detail view showing the full scrollable message history.", "pass": false, "notes": "" },
+        { "id": "AC-013-06", "priority": 1, "criterion": "The conversation detail view provides a Continue Conversation action that opens the chat panel scoped to that conversation.", "pass": false, "notes": "" },
+        { "id": "AC-013-07", "priority": 1, "criterion": "Deleting a conversation is only permitted for the conversation owner.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-014",
+      "priority": 1,
+      "role": "Team member",
+      "want": "configure and securely store my HubSpot, Confluence, and Anthropic tokens",
+      "soThat": "the system can access my data sources and AI provider",
+      "acceptanceCriteria": [
+        { "id": "AC-014-01", "priority": 1, "criterion": "The Settings page shows masked inputs for HubSpot API token, Confluence API token, and Anthropic API key.", "pass": false, "notes": "" },
+        { "id": "AC-014-02", "priority": 1, "criterion": "The Settings page provides a reveal toggle that temporarily reveals a token value in the UI.", "pass": false, "notes": "" },
+        { "id": "AC-014-03", "priority": 1, "criterion": "Saving tokens calls PUT /settings/tokens and shows a success message.", "pass": false, "notes": "" },
+        { "id": "AC-014-04", "priority": 1, "criterion": "The backend encrypts each stored token before writing it to the database.", "pass": false, "notes": "" },
+        { "id": "AC-014-05", "priority": 1, "criterion": "The settings tokens presence endpoint returns only boolean presence flags and does not return raw token values.", "pass": false, "notes": "" },
+        { "id": "AC-014-06", "priority": 1, "criterion": "If a required token is missing for a requested data source, the chat request proceeds with available sources and records the missing source in metadata.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-015",
+      "priority": 1,
+      "role": "Team member",
+      "want": "select default data sources for chat",
+      "soThat": "I can control which systems are queried by default",
+      "acceptanceCriteria": [
+        { "id": "AC-015-01", "priority": 1, "criterion": "The Settings page displays checkboxes for HubSpot, Confluence, and Call Transcripts as default data sources.", "pass": false, "notes": "" },
+        { "id": "AC-015-02", "priority": 1, "criterion": "Saving default data sources calls PUT /settings/preferences and persists the selection.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-016",
+      "priority": 1,
+      "role": "Team member",
+      "want": "run a manual data sync from the platform",
+      "soThat": "I can refresh the latest HubSpot deal data and analysis",
+      "acceptanceCriteria": [
+        { "id": "AC-016-01", "priority": 1, "criterion": "Clicking Sync Now triggers POST /deals/sync and shows a started state.", "pass": false, "notes": "" },
+        { "id": "AC-016-02", "priority": 1, "criterion": "The header sync status indicator updates to show running/completed/failed states.", "pass": false, "notes": "" },
+        { "id": "AC-016-03", "priority": 1, "criterion": "If sync fails, the UI shows a failure state and provides a retry action.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-017",
+      "priority": 1,
+      "role": "System",
+      "want": "run a scheduled daily sync at 2 AM",
+      "soThat": "deal data and analysis stay current without manual intervention",
+      "acceptanceCriteria": [
+        { "id": "AC-017-01", "priority": 1, "criterion": "A scheduler triggers the backend sync job once per day at the configured schedule.", "pass": false, "notes": "" },
+        { "id": "AC-017-02", "priority": 1, "criterion": "Scheduled sync runs are recorded in sync_logs with type set to scheduled.", "pass": false, "notes": "" },
+        { "id": "AC-017-03", "priority": 1, "criterion": "A scheduled sync job processes deals and updates each deal's lastSyncedAt timestamp.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-018",
+      "priority": 1,
+      "role": "System",
+      "want": "generate AI deal analysis during sync",
+      "soThat": "each deal has up-to-date BANT/MEDIC insights",
+      "acceptanceCriteria": [
+        { "id": "AC-018-01", "priority": 1, "criterion": "During sync, the backend requests an AI-generated DealAnalysis for each deal in scope.", "pass": false, "notes": "" },
+        { "id": "AC-018-02", "priority": 1, "criterion": "The backend stores the DealAnalysis output in deals.analysis as JSON.", "pass": false, "notes": "" },
+        { "id": "AC-018-03", "priority": 1, "criterion": "The DealAnalysis includes generatedAt set to the time of analysis generation.", "pass": false, "notes": "" },
+        { "id": "AC-018-04", "priority": 1, "criterion": "If analysis generation fails for a deal, sync continues for other deals and logs the failure in sync_logs.errors.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-019",
+      "priority": 1,
+      "role": "Team member",
+      "want": "use the Chrome extension sidebar inside HubSpot",
+      "soThat": "I can ask contextual questions without leaving HubSpot",
+      "acceptanceCriteria": [
+        { "id": "AC-019-01", "priority": 1, "criterion": "The extension uses a Manifest V3 side panel and opens a sidebar UI on user action.", "pass": false, "notes": "" },
+        { "id": "AC-019-02", "priority": 1, "criterion": "When the extension opens on HubSpot, it detects whether the current page is a deal, contact, or company record.", "pass": false, "notes": "" },
+        { "id": "AC-019-03", "priority": 1, "criterion": "When a deal context is detected, the extension calls the deal context endpoint using the HubSpot ID.", "pass": false, "notes": "" },
+        { "id": "AC-019-04", "priority": 1, "criterion": "When a contact context is detected, the extension calls the contact context endpoint using the HubSpot ID.", "pass": false, "notes": "" },
+        { "id": "AC-019-05", "priority": 1, "criterion": "When a company context is detected, the extension calls the company context endpoint using the HubSpot ID.", "pass": false, "notes": "" },
+        { "id": "AC-019-06", "priority": 1, "criterion": "When the user navigates within HubSpot to another record type, the extension updates the displayed context indicator.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-020",
+      "priority": 1,
+      "role": "Extension user",
+      "want": "see a logged-out state in the extension",
+      "soThat": "I know I must log in before using the AI",
+      "acceptanceCriteria": [
+        { "id": "AC-020-01", "priority": 1, "criterion": "If no valid auth token exists in chrome.storage, the extension displays a logged-out screen.", "pass": false, "notes": "" },
+        { "id": "AC-020-02", "priority": 1, "criterion": "The logged-out screen includes a Log In button that opens the platform login page in a new tab.", "pass": false, "notes": "" },
+        { "id": "AC-020-03", "priority": 1, "criterion": "After the user logs in on the platform and the token is stored, the extension transitions to the logged-in state without requiring reinstall.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-021",
+      "priority": 1,
+      "role": "Extension user",
+      "want": "chat with the AI assistant in the HubSpot sidebar",
+      "soThat": "I can get answers while viewing CRM records",
+      "acceptanceCriteria": [
+        { "id": "AC-021-01", "priority": 1, "criterion": "The extension sidebar renders a scrollable chat history panel.", "pass": false, "notes": "" },
+        { "id": "AC-021-02", "priority": 1, "criterion": "The extension sidebar renders a message input with a Send action.", "pass": false, "notes": "" },
+        { "id": "AC-021-03", "priority": 1, "criterion": "Sending a message from the extension creates or uses a conversation scoped to the current context.", "pass": false, "notes": "" },
+        { "id": "AC-021-04", "priority": 1, "criterion": "While awaiting the AI response, the extension shows a typing or loading indicator.", "pass": false, "notes": "" },
+        { "id": "AC-021-05", "priority": 1, "criterion": "If the extension is opened on a non-HubSpot page, it displays an instruction to open HubSpot to use Pulse AI.", "pass": false, "notes": "" },
+        { "id": "AC-021-06", "priority": 1, "criterion": "If the extension cannot detect a HubSpot record context, it displays an instruction to navigate to a deal, contact, or company page.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-022",
+      "priority": 1,
+      "role": "Extension user",
+      "want": "browse and execute skills from the extension",
+      "soThat": "I can run standardized workflows without leaving HubSpot",
+      "acceptanceCriteria": [
+        { "id": "AC-022-01", "priority": 1, "criterion": "The extension displays a Skills button that opens a skill picker drawer.", "pass": false, "notes": "" },
+        { "id": "AC-022-02", "priority": 1, "criterion": "The skill picker drawer provides a search input that filters skills by name.", "pass": false, "notes": "" },
+        { "id": "AC-022-03", "priority": 1, "criterion": "The skill picker drawer shows recent skills (up to 3) based on local usage tracking.", "pass": false, "notes": "" },
+        { "id": "AC-022-04", "priority": 1, "criterion": "Selecting a skill executes it by sending a chat message that includes the selected skillId.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-023",
+      "priority": 1,
+      "role": "Extension user",
+      "want": "run quick actions such as drafting follow-up emails",
+      "soThat": "I can complete common tasks faster",
+      "acceptanceCriteria": [
+        { "id": "AC-023-01", "priority": 1, "criterion": "The extension displays a Quick Actions UI area or menu.", "pass": false, "notes": "" },
+        { "id": "AC-023-02", "priority": 1, "criterion": "Choosing a quick action inserts a predefined prompt into the message input.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-024",
+      "priority": 1,
+      "role": "Extension user",
+      "want": "view sync status and trigger manual sync from the extension",
+      "soThat": "I can refresh data without switching to the platform",
+      "acceptanceCriteria": [
+        { "id": "AC-024-01", "priority": 1, "criterion": "The extension displays the last sync time based on /deals/sync/status.", "pass": false, "notes": "" },
+        { "id": "AC-024-02", "priority": 1, "criterion": "The extension provides a manual Sync button that triggers POST /deals/sync.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-025",
+      "priority": 1,
+      "role": "System",
+      "want": "protect endpoints and data against common web vulnerabilities",
+      "soThat": "the internal tool remains secure even if misused",
+      "acceptanceCriteria": [
+        { "id": "AC-025-01", "priority": 1, "criterion": "All non-auth API endpoints require a valid Authorization Bearer token.", "pass": false, "notes": "" },
+        { "id": "AC-025-02", "priority": 1, "criterion": "JWT tokens expire within 24 hours and are rejected after expiry.", "pass": false, "notes": "" },
+        { "id": "AC-025-03", "priority": 1, "criterion": "The API validates all request bodies and query params using schemas and returns 400 on validation failure.", "pass": false, "notes": "" },
+        { "id": "AC-025-04", "priority": 1, "criterion": "The API enforces per-user rate limiting of 100 requests per minute and returns 429 when exceeded.", "pass": false, "notes": "" },
+        { "id": "AC-025-05", "priority": 1, "criterion": "The API uses safe error responses that do not include stack traces or internal secrets.", "pass": false, "notes": "" },
+        { "id": "AC-025-06", "priority": 1, "criterion": "The API enforces ownership checks for conversation read/update/delete access.", "pass": false, "notes": "" },
+        { "id": "AC-025-07", "priority": 1, "criterion": "The API enforces creator-only mutation for skills (update/delete).", "pass": false, "notes": "" },
+        { "id": "AC-025-08", "priority": 1, "criterion": "CORS is restricted to known platform domains and rejects other origins.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-026",
+      "priority": 1,
+      "role": "System",
+      "want": "store third-party tokens encrypted at rest with per-user derived keys",
+      "soThat": "tokens are protected even if database access is compromised",
+      "acceptanceCriteria": [
+        { "id": "AC-026-01", "priority": 1, "criterion": "The backend encrypts tokens using AES-256 before storing them.", "pass": false, "notes": "" },
+        { "id": "AC-026-02", "priority": 1, "criterion": "The encryption key derivation uses a server-side secret combined with the user ID to produce a per-user key.", "pass": false, "notes": "" },
+        { "id": "AC-026-03", "priority": 1, "criterion": "The backend never logs token values in plaintext.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-027",
+      "priority": 1,
+      "role": "System",
+      "want": "provide robust error handling for network, sync, extension, and AI failures",
+      "soThat": "users can recover without losing work",
+      "acceptanceCriteria": [
+        { "id": "AC-027-01", "priority": 1, "criterion": "If an API request times out, the client shows a taking longer indicator and retries once.", "pass": false, "notes": "" },
+        { "id": "AC-027-02", "priority": 1, "criterion": "If the client is offline, the UI shows an offline indicator.", "pass": false, "notes": "" },
+        { "id": "AC-027-03", "priority": 1, "criterion": "If the API returns 401, the client clears stored auth state and navigates to /login.", "pass": false, "notes": "" },
+        { "id": "AC-027-04", "priority": 1, "criterion": "If the API returns 429, the client displays a rate limit message and retries only after a delay.", "pass": false, "notes": "" },
+        { "id": "AC-027-05", "priority": 1, "criterion": "If HubSpot integration fails during sync, the sync logs a warning and uses cached data where available.", "pass": false, "notes": "" },
+        { "id": "AC-027-06", "priority": 1, "criterion": "If Confluence integration fails during context assembly, chat proceeds using other sources and records the skip reason.", "pass": false, "notes": "" },
+        { "id": "AC-027-07", "priority": 1, "criterion": "If AI requests fail, the user can retry the exact same message without duplicating prior assistant responses.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-028",
+      "priority": 1,
+      "role": "System",
+      "want": "collect minimal observability signals for debugging and usage tracking",
+      "soThat": "the team can troubleshoot issues and understand adoption",
+      "acceptanceCriteria": [
+        { "id": "AC-028-01", "priority": 1, "criterion": "The backend logs request id, route, status code, and latency for each API request.", "pass": false, "notes": "" },
+        { "id": "AC-028-02", "priority": 1, "criterion": "The backend logs sync job start and completion with syncLogId.", "pass": false, "notes": "" },
+        { "id": "AC-028-03", "priority": 1, "criterion": "The backend logs AI request failures with non-sensitive error metadata.", "pass": false, "notes": "" },
+        { "id": "AC-028-04", "priority": 1, "criterion": "The system records token usage estimates per message in message metadata.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-029",
+      "priority": 2,
+      "role": "Team member",
+      "want": "see sync logs/history in the platform",
+      "soThat": "I can verify whether data is fresh and diagnose sync issues",
+      "acceptanceCriteria": [
+        { "id": "AC-029-01", "priority": 2, "criterion": "The platform displays the most recent sync status with started/completed timestamps.", "pass": false, "notes": "" },
+        { "id": "AC-029-02", "priority": 2, "criterion": "If the most recent sync failed, the platform displays a summarized error list.", "pass": false, "notes": "" }
+      ]
+    },
+    {
+      "id": "US-030",
+      "priority": 2,
+      "role": "System",
+      "want": "meet baseline accessibility requirements",
+      "soThat": "the UI is usable by keyboard and assistive technologies",
+      "acceptanceCriteria": [
+        { "id": "AC-030-01", "priority": 2, "criterion": "All interactive elements are reachable and operable via keyboard only.", "pass": false, "notes": "" },
+        { "id": "AC-030-02", "priority": 2, "criterion": "Form inputs have associated labels or aria-label attributes.", "pass": false, "notes": "" },
+        { "id": "AC-030-03", "priority": 2, "criterion": "Color is not the only means of conveying deal health status.", "pass": false, "notes": "" }
+      ]
+    }
+  ],
+  "nonFunctionalRequirements": {
+    "performance": [
+      { "id": "NFR-PERF-01", "priority": 1, "requirement": "Deals list API returns the first page within 2 seconds under normal load.", "pass": false, "notes": "" },
+      { "id": "NFR-PERF-02", "priority": 1, "requirement": "Chat message round-trip shows a loading indicator within 200ms after submit.", "pass": false, "notes": "" },
+      { "id": "NFR-PERF-03", "priority": 1, "requirement": "The backend enforces an upper bound on AI context assembly size before calling the AI provider.", "pass": false, "notes": "" }
+    ],
+    "reliability": [
+      { "id": "NFR-REL-01", "priority": 1, "requirement": "Sync jobs continue processing remaining deals after individual deal failures.", "pass": false, "notes": "" },
+      { "id": "NFR-REL-02", "priority": 1, "requirement": "The API returns a consistent JSON error shape for all 4xx/5xx errors.", "pass": false, "notes": "" }
+    ],
+    "privacyAndSecurity": [
+      { "id": "NFR-SEC-01", "priority": 1, "requirement": "Secrets and tokens are never included in logs.", "pass": false, "notes": "" },
+      { "id": "NFR-SEC-02", "priority": 1, "requirement": "All stored third-party tokens are encrypted at rest.", "pass": false, "notes": "" },
+      { "id": "NFR-SEC-03", "priority": 1, "requirement": "The extension requests only minimal Chrome permissions required for operation.", "pass": false, "notes": "" }
+    ],
+    "observability": [
+      { "id": "NFR-OBS-01", "priority": 1, "requirement": "All API responses include a request id header.", "pass": false, "notes": "" },
+      { "id": "NFR-OBS-02", "priority": 2, "requirement": "Client errors are logged with route context and non-sensitive details.", "pass": false, "notes": "" }
+    ]
+  },
+  "abuseAndMisuseCases": [
+    {
+      "id": "ABUSE-01",
+      "risk": "Prompt injection via HubSpot notes/emails or Confluence pages",
+      "mitigation": [
+        "Treat retrieved content as untrusted and wrap it in delimiting context blocks",
+        "Use system instructions that explicitly refuse tool/token exfiltration",
+        "Do not include token values in any model context"
+      ],
+      "pass": false,
+      "notes": ""
+    },
+    {
+      "id": "ABUSE-02",
+      "risk": "Data exfiltration by querying other deals' data via IDOR",
+      "mitigation": [
+        "Enforce access checks on deal retrieval endpoints",
+        "Limit context endpoints to hubspotId values mapped to allowed deal/contact/company entities",
+        "Use parameterized queries and validate ID formats"
+      ],
+      "pass": false,
+      "notes": ""
+    },
+    {
+      "id": "ABUSE-03",
+      "risk": "Excessive API usage causing cost spikes (AI calls)",
+      "mitigation": [
+        "Per-user rate limiting",
+        "Optional per-user daily AI call caps (configurable)",
+        "Store token usage estimates for monitoring"
+      ],
+      "pass": false,
+      "notes": ""
+    }
+  ],
+  "releasePlan": {
+    "milestones": [
+      { "id": "M1", "name": "Auth + Layout", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M2", "name": "Deals list + Deal detail shell", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M3", "name": "Skills CRUD", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M4", "name": "Chat (HubSpot context only)", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M5", "name": "Extension sidebar + context detection", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M6", "name": "Confluence + transcripts integration", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M7", "name": "Deal analysis generation on sync", "priority": 1, "pass": false, "notes": "" },
+      { "id": "M8", "name": "AI-assisted skill creation", "priority": 2, "pass": false, "notes": "" },
+      { "id": "M9", "name": "Scheduled sync + polish", "priority": 2, "pass": false, "notes": "" }
+    ]
+  }
+}

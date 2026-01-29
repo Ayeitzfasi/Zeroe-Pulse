@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeroe Brand Guidelines 2025</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;900&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --zeroe-blue: #2673EA;
+      --charcoal: #0D1318;
+      --white: #FFFFFF;
+      --dusty-rose: #C17B7E;
+      --slate-blue: #6B7FA3;
+      --coral: #E07065;
+      --muted-purple: #8B7B9E;
+      --soft-coral: #E8A99A;
+      --light-blue: #C5D8F7;
+      --light-grey: #F5F5F7;
+      --warm-peach: #FDE8E4;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--charcoal);
+      background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 40%, #fef6f4 70%, #fde8e4 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: flex-end;
+      padding: 20px 40px;
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      background: linear-gradient(135deg, rgba(248,249,252,0.95) 0%, rgba(255,255,255,0.95) 40%, rgba(254,246,244,0.95) 70%, rgba(253,232,228,0.95) 100%);
+      z-index: 100;
+    }
+
+    .logo {
+      height: 32px;
+    }
+
+    /* Gradient Headings */
+    .gradient-heading {
+      font-family: 'Inter', sans-serif;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--zeroe-blue) 0%, var(--muted-purple) 50%, var(--coral) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 24px;
+    }
+
+    h1.gradient-heading {
+      font-size: 48px;
+      line-height: 1.2;
+    }
+
+    h2.gradient-heading {
+      font-size: 36px;
+      line-height: 1.3;
+      margin-top: 60px;
+    }
+
+    h3 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 22px;
+      color: var(--dusty-rose);
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+
+    /* Cover Section */
+    .cover {
+      text-align: center;
+      padding: 120px 0 80px;
+      margin-top: 60px;
+    }
+
+    .cover .logo-large {
+      height: 60px;
+      margin-bottom: 40px;
+    }
+
+    .cover h1 {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .cover .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      color: var(--coral);
+      margin-bottom: 40px;
+    }
+
+    .cover .confidential {
+      font-size: 14px;
+      color: var(--muted-purple);
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Content Sections */
+    section {
+      padding: 40px 0;
+      border-bottom: 1px solid rgba(107, 127, 163, 0.2);
+    }
+
+    section:last-child {
+      border-bottom: none;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--charcoal);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    th {
+      background: var(--zeroe-blue);
+      color: white;
+      font-family: 'Work Sans', sans-serif;
+      font-weight: 500;
+      text-align: left;
+      padding: 14px 18px;
+    }
+
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--light-grey);
+    }
+
+    tr:nth-child(odd) td {
+      background: white;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Color Swatches */
+    .color-swatch {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      vertical-align: middle;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .color-code {
+      font-family: monospace;
+      font-size: 14px;
+      color: var(--charcoal);
+    }
+
+    /* Multi-color Example Box */
+    .example-box {
+      background: var(--light-grey);
+      padding: 30px;
+      border-radius: 12px;
+      margin: 24px 0;
+      text-align: center;
+    }
+
+    .multi-color-example {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    /* Rules List */
+    .rules-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .rules-list li {
+      padding: 8px 0 8px 28px;
+      position: relative;
+    }
+
+    .rules-list li::before {
+      content: "•";
+      color: var(--coral);
+      font-size: 20px;
+      position: absolute;
+      left: 0;
+      top: 6px;
+    }
+
+    /* Numbered Steps */
+    .steps-list {
+      list-style: none;
+      padding: 0;
+      counter-reset: step-counter;
+    }
+
+    .steps-list li {
+      padding: 10px 0 10px 45px;
+      position: relative;
+      counter-increment: step-counter;
+    }
+
+    .steps-list li::before {
+      content: counter(step-counter);
+      background: var(--soft-coral);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      left: 0;
+      top: 8px;
+    }
+
+    /* Highlight Box */
+    .highlight-box {
+      background: white;
+      border-left: 4px solid var(--zeroe-blue);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Warning Box */
+    .warning-box {
+      background: #fff5f5;
+      border-left: 4px solid var(--coral);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning-box h4 {
+      color: var(--coral);
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    /* Differentiators Grid */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+
+    .diff-card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .diff-card h4 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: var(--zeroe-blue);
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .diff-card p {
+      font-size: 14px;
+      color: var(--slate-blue);
+      margin: 0;
+    }
+
+    /* Quick Reference Grid */
+    .quick-ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin: 24px 0;
+    }
+
+    .quick-ref-card {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .quick-ref-card h4 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 18px;
+      background: linear-gradient(90deg, var(--zeroe-blue) 0%, var(--muted-purple) 50%, var(--coral) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: var(--slate-blue);
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    /* Print Styles */
+    @media print {
+      header {
+        position: static;
+        background: none;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      section {
+        page-break-inside: avoid;
+      }
+      
+      .cover {
+        page-break-after: always;
+      }
+    }
+
+    /* Font link styling */
+    a {
+      color: var(--zeroe-blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .font-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="data:image/png;base64,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f/p/5f9L/k/8z/m/4n/V/5P/P/of9L/m/8//k/8v/l/0v+r/yf+T/y/+b/Rf6v/D/5P/L/4/9H/qf8X/w/6H/W/5P9b/o/8P/m/0v+p/y//Z/5f+L/x/+P/R/6n/F/8P+n/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/xeGbzNe0AAAAASUVORK5CYII=" alt="Zeroe Logo">
+  </header>
+
+  <div class="container">
+    <!-- Cover Section -->
+    <div class="cover">
+      <img class="logo-large" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAABECAYAAACoJoLeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAABJoSURBVHgB7Z0JeFTV2cf/M5ONJCSQsIR9FxAUEERABZRNwQUXVKxLW7XW1tpP7af2s7a2ttW6tFVrW6v2s1Zb61K1WsUFUEAWFRBZZd8hJJCQPZn5vufcc2fPZCYziUF5f8+TZ+6de+fec8+d/znvOed9LyAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgnAYk+Z4Hx/Bc4LQRJQ63gGBXAjegOc/nQN1GnhT8HdkfY/nuEh7g/MkCE3I4aboC7DMsGnTprDH+vfvj7Zt26q/Q4EfDG4MfHzouOOOw9ChQ3HCCSdoR7gRsN5X6PfghxMvNjeKruiGwnMM/4a6CLQfysvL8eijj+K1116LWMYf/vAHTJ48GWlpaSgtLcU111yD+fPn6zKnTZuGq666CgkJCXBL/CLoukMxJCQl4Muvv8Lq1at3u3SZ/aGioiLlLzk5OfQYRl/BRYkb8fLLL6dEOufkk0/e09DQEFYeMgvXr8dNN96E5557zuOYJk2ahKeeegpJSUka5LFWcXr06KHMZGLaNm0xdZepAU/sNHvO7MhdB/X5JCQmBHz8e1P+Q/8e9g5F50Xq0qWLXzlNyYoVK3DrrbfiT3/6E5RLVUBeXh6++OIL9febb76Jc889F/v37w9zFRALnn7laT2/uBxbN+dhy+Y8Pbdbt27Izc1FdnY2ateXYuLEibho6sWB+4OvJenQoQM+/PBDjBw5Ejk5OXAG4Y0dO/bfkTIBVoq6+vpMmjRJv0fSYjlutDM6xSyjo8aNXe+5556wee+88w7uvvvuoGNpaWl45JFH8Mtf/hLff/89pk+fjkWLFoUtx3TUqFE49dRTTR8Dd955J2bNmoXZs2cHHbv11lsxduxYjB8/Xh19/vnnkZGRoZcZdqh22AhFy+3WLtpBE3kkJCaEjQkddOwH3kJMvF566aUY7NXV1bj//vtx4YUXok+fPoFySkpK8MADD+CEE07A5MmTVSCCYyT4d999h5kzZ+LTTz/FmjVrws4jQsrjjhw5Ev/3f/+nNDvCjiS6rtWc5v00oGtgGE6WTjnlFOTk5Gif06dPx5133hlyvsULQ2fOnRtSjpCXl6fc8aJFi9C+fXtwEJNBBQVxGZSXn/8NV+6/dRCQ7m2xR/fuEe/n7/rPIGvefxMB4d/bWGTbvDmvMvhEFr4n9urEJvv7XXo5bk5Ojo7RHImvbZuTl+N1NRxC2ITetvhbNLYLwJeJrrQk+DvKKKBXmzZYs+bbwCHQi/Y5dEJU/lLuPFgA/h8JkSfbzT5QWYE99euaJqG3fqNdC+TJJByO0Bv0cWQkxQG2d4N6H7hAJTKfbdYMUEQDhGwsLMoKNKSAy0k0XPu2lVEjKfn5Qde2R99L+0eN2g1VVWGSHYdPPfP7Zu4I4LQJKTWleH/aErYvj27EPSU6D9bGgn+H/0nwZMxfwVbS/pD6C3q/6CYRA5k4hJBQXG2qPV4PB56vCRCCILgRE+Dv+Cxt3Q+Y1oJ7PvkkaPCRdOUOCM8ILQIo61DZW0qJK/v0BNNB9sFvQfZeBxST5L58Qbnt3X0H0b97h3GI6bqD85Xn08mLy9GQMBC8fR8MnHZlqJN7y8B/RbqDzJScjPycH8qv3Qp+z5Z/vycFJzJdU/QQSQEC/pwJIR/r/+z0I8n8YB5X0/qPv7lRTpdD4vY9dfHDwO5O6Z7zb4xh2qMQYu9rMVLqYf4d3QXBB/V/4T+T7bkM+n3cT3f04L6Ofv/0r+T7Y/5VDj4u8LP0Hfo8YTw/DwcxIdZW3qUv1/6d2p/B/ud+n3+H/yOwHHs/47+L+kT7DxhPpP6H8J/oT+n/xPwPHo80T4T/D/6H9J/gT6j4T/B/xnwHHy+0T5T+j/1P+D3Q/Yf+T/C/pf9T+h/pf8j+1P+P+kT6T/w/6X/J/wj+n/BO6P/p/wT8X9j4pP+H/0/6H/I/AD+n/1P6X/Q/BP9T+n/0/+D3Qf4v+T/pf+D/x/6f9J/wv+H/U/oP9H/C/o/9T/C/5P/L+gT7T/B/8H9h/w/+n/RP+P/g/4f+T/pf8j/x/6P/U/4/+T+g/qP8J+h/yP4L/g/8P+T/Q/5P+R/B/Z/+h/3P+P/o/8j/D/5H+l/1/6//U/4f+h/xf4P/J/wf8j/5/6f9J/4/+D/l/6f/I/wT9H/l/7/9B/qH+L/R/7P+C/0P/R/Yl/D/4/8L/D/5/6v9C/6P+n/T/6f9J/4D9T/r/9P/k/4P/D/4v+R/A/4T/D/0f+7/A/4n/F/gP+h/B/6n/B/8/+v/0P+H/Q/+H/R/7/8P/H/h/4f+T/wP+j/xP4H/Q/wH/R/4P/D/9X+n/0P+n/7v/n/S/5P+C/0/+P/y/6v9I/9/+v/Q/5P+E/0/6f/4P+F/6/0X+L/y/6X/Y/6H+n/R/6v9I/yP+f/R/5/8L/5/+D/1f+n/T/5f+H/l/8P+g/0X/F/t/8P+n/xt9P9L/pf8H/L/4P/B/4v+J/0/7/+h/0/+//gf9D/v/w/+d/n/0f+x/CvxH8H/H/w3+h/3f+P+j/yP/J/xP+X+D/0H9H/H/pv9X/0f6D/q/xf+N/R/5P/H/gf9L/0f+p/1f6X/V/5H+l/1/4X/X/6P+V/o/8//E/5H+j/xP6H/Y/5//p/8H+x/yP6T/J/sf6X/Q/5P+R+Df7X/N/wP/T/qf9X+n/y/+f/y/6P+1/0f6n/X/Yv9j+9/C/6n/C/0f+j/0/+7/D/8T/p/1P2T/N/6P8H/g/8z/m/6/+H/S/6n/R/p/8/+l/1v/P/of8j/B/5L+B/0v+D/wf+P/Rf5f+3/yP/L/AP+z/xv9H/k/8v/r/4H/J/4H/D/5//P/of9L/gf8f/F/5H9I/h/0f+7/zf4f+D/xf+f/Uf9T/C/o/8T/D/6f/D/g/8r/n/5v7P/K/6f+j/2P+H/wP+X/U/4v+X/zv6H/8T+Avyf+h/wf+z/kf8T/m/0v+b/Q/+n/of8j/xP6//If0r/Q/6n/Z/pf8n/i/8v+n/yf+L/RP8L+h/0f+p/y/+N/yP/H/wP+X/zP+P/g/8n/g/0/+z/Sf9D/o/8X/h/0/+n/1f9b/n/0/+r/0f9n/l/0v+H/xf/P/q/0P+l/yP/Y/u/8f+j/y//T/pf9P+p/03/X/of9H+i/yv/P/5/+L/y/+V/TP+P/h/8f+p/0P+n/zv/X/p/8/+m/y3/T/o/8v+l/0P+V/w/6v9I/8v+p/y/+b/yf6L/Z/9f+r/1/+V/yP/R/4/+P/m/8P/i/0X+D/2/6X/L/5P+r/w/6P+e/m/0f+l/wf8b/Q/6P9X/sv9H/c/6/9b/k/8//i/9f/C/o/8n/W/5P/K/4v+N/yf9r/p/0f+G/if8H/m/0P+h/zf/T/p/8/+0/z//V/Z/pv8d/0/+3/Q/5H/G/4H+N/wf6P/R/5H/N/0/+T/xf8P/l/8n/W/5f/H/ov+F/R/r/9L/q/87/1/6X/b/gP8D/2/+P/R/7H/F/4P+N/0v6X/T/4n+N/x/6//R/4v/M/o/9P+p/0X/d/4/7P/E/4P+j/2/6f/K/4P+X/z/6X/Y/5X/L/4//H/of8L/g/8D/1/6H/L/4/+H/yv/T/o/9D/i/83/g/4n/c/5/+P/jf8r/0f6n/W/5f/L/5P+j/xf+D/yf6L/Uf8L/k/8H/g/8X/i/0b/x/4n/Z/5/9P/k/4v/O/o/8//j/8H/k/8P/T/6v/S/5P/K/5H+t/1P6f/U/5T/L/4v/D/4v/N/5P+L/xP9T/k/8X/j/0P/K/5P+t/x/+H/xv+N/xf9D/m/8H/h/8T/A/5v/N/5//H/4v/E/4n/I/0v+j/1f6P/V/4P/L/5f9L/qf8b/U/6n/J/4f/D/5P+j/w/+P/wf6P/Q/9H/q/8n/h/0v+p/yf9H/u/8//g/8X/k/4H/a/5/9L/k/8H/X/6v9L/kf8H/h/0f+b/yf9H/o/8P/n/0f+h/w//T/o/8//l/0v+L/z/6P/X/5f/O/4P/P/o/9H/m/8P/S/5//L/5f+J/xf+b/y/6H/S/5H/K/9H/t/8P+n/1P+X/y/+X/z/6P/V/5X/M/9f+r/1/6//R/6//L/of9H/j/8X/Q/5P/P/pP9V/0/6H/W/5P+J/zf9j/r/8n/l/0j/Q/6f/L/of8v/l/8j/Q/5n/L/oP9L/0v+H/y/+L/xf9D/k/8H/Q/5/9P/lf8T/y/+f/R/6H/M/5/+j/0P+X/y/6b/I/9n/m/0v+f/y/6X/V/5v/N/5P9L/6P+j/w/+b/R/5H/F/8n/g/0/+V/Sf6v/D/5v/L/pP9V/0v+z/w/6X/W/5f/O/9P+j/1/+T/yf+T/y/9P/g/8/+j/0f/d/7f9L/m/0f/p/5f/L/4//H/of9H/2f+b/R/5f/I/4X/H/0f+z/zf+T/y/+X/y/9P/k/8f/j/0P/p/5//L/4f/H/4/9H/qf8X/Q/5f/L/pf9T/k/8v/n/0f+j/0f+b/yf9H/m/8v/l/0n/U/4//F/4v/G/4/+H/yf+X/y/6H/T/5f+H/z/6H/R/5v/P/pf8v/l/0v/V/5f/N/5P9b/o/8P/l/8H+g/0f/p/5f9L/k/8z/m/4n/V/5P/P/of9L/m/8//k/8v/l/0v+r/yf+T/y/+b/Rf6v/D/5P/L/4/9H/qf8X/w/6H/W/5P9b/o/8P/m/0v+p/y//Z/5f+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/x/+P/R/6n/F/8P+j/1P+X/y/+X/z/6P/V/5v/L/5P+L/xeGbzNe0AAAAASUVORK5CYII=" alt="Zeroe Logo">
+      <h1 class="gradient-heading">Brand Guidelines</h1>
+      <p class="subtitle">2025 Evolution</p>
+      <p>Internal Reference Document</p>
+      <p class="confidential">Confidential – For Zeroe Staff Only</p>
+    </div>
+
+    <!-- Introduction -->
+    <section>
+      <h2 class="gradient-heading">Introduction</h2>
+      <p>Zeroe is a climate tech company building intelligent data infrastructure for sustainability and impact. Our evolved brand identity differentiates us from competitors through distinctive gradient treatments, multi-color headline typography, and abstract 3D terrain imagery.</p>
+      <p>This document outlines the core elements of our visual identity system. Please refer to these guidelines when creating any Zeroe-branded materials to ensure consistency across all touchpoints.</p>
+    </section>
+
+    <!-- Brand Voice -->
+    <section>
+      <h2 class="gradient-heading">Brand Voice & Tone</h2>
+      <p>Our brand voice is the personality that comes through in all our communications. Write content that is:</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Informed & Factual</strong></td>
+            <td>Backed by data and expertise. We speak with authority because we know our subject.</td>
+          </tr>
+          <tr>
+            <td><strong>Clever</strong></td>
+            <td>Smart without being condescending. We find elegant ways to explain complex topics.</td>
+          </tr>
+          <tr>
+            <td><strong>Conversational</strong></td>
+            <td>Professional but approachable. We talk with people, not at them.</td>
+          </tr>
+          <tr>
+            <td><strong>Concise</strong></td>
+            <td>Avoid dense, verbose, or overly technical language. Every word earns its place.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Color System -->
+    <section>
+      <h2 class="gradient-heading">Color System</h2>
+      <p>Our color palette creates warmth and sophistication, setting us apart from the typical cold blue-grey of sustainability competitors.</p>
+
+      <h3>Primary Colors</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Color</th>
+            <th>Hex</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="color-swatch" style="background: #2673EA;"></span>Zeroe Blue</td>
+            <td><span class="color-code">#2673EA</span></td>
+            <td>Logo, key accents, data viz primary, table headers</td>
+          </tr>
+          <tr>
+            <td><span class="color-swatch" style="background: #0D1318;"></span>Charcoal</td>
+            <td><span class="color-code">#0D1318</span></td>
+            <td>Body text, dark backgrounds</td>
+          </tr>
+          <tr>
+            <td><span class="color-swatch" style="background: #FFFFFF; border: 1px solid #ccc;"></span>White</td>
+            <td><span class="color-code">#FFFFFF</span></td>
+            <td>Backgrounds, text on dark</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Headline Accent Colors</h3>
+      <p>These colors are used together in large headlines, creating visual interest through color-shifting words:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Color</th>
+            <th>Hex</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="color-swatch" style="background: #C17B7E;"></span>Dusty Rose</td>
+            <td><span class="color-code">#C17B7E</span></td>
+            <td>First word/phrase in headlines</td>
+          </tr>
+          <tr>
+            <td><span class="color-swatch" style="background: #6B7FA3;"></span>Slate Blue</td>
+            <td><span class="color-code">#6B7FA3</span></td>
+            <td>Middle words in headlines</td>
+          </tr>
+          <tr>
+            <td><span class="color-swatch" style="background: #E07065;"></span>Coral/Salmon</td>
+            <td><span class="color-code">#E07065</span></td>
+            <td>Accent words, emphasis</td>
+          </tr>
+          <tr>
+            <td><span class="color-swatch" style="background: #8B7B9E;"></span>Muted Purple</td>
+            <td><span class="color-code">#8B7B9E</span></td>
+            <td>Supporting headline text</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Data Visualization Palette</h3>
+      <p>For charts, graphs, and infographics, use this sequence:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Series</th>
+            <th>Color</th>
+            <th>Hex</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Primary</td>
+            <td><span class="color-swatch" style="background: #2673EA;"></span>Zeroe Blue</td>
+            <td><span class="color-code">#2673EA</span></td>
+            <td>First choice</td>
+          </tr>
+          <tr>
+            <td>Secondary</td>
+            <td><span class="color-swatch" style="background: #6B7FA3;"></span>Slate Blue</td>
+            <td><span class="color-code">#6B7FA3</span></td>
+            <td>Second choice</td>
+          </tr>
+          <tr>
+            <td>Tertiary</td>
+            <td><span class="color-swatch" style="background: #C17B7E;"></span>Dusty Rose</td>
+            <td><span class="color-code">#C17B7E</span></td>
+            <td>Third choice</td>
+          </tr>
+          <tr>
+            <td>Quaternary</td>
+            <td><span class="color-swatch" style="background: #E07065;"></span>Coral</td>
+            <td><span class="color-code">#E07065</span></td>
+            <td>Fourth choice</td>
+          </tr>
+          <tr>
+            <td>Neutral</td>
+            <td><span class="color-swatch" style="background: #8B7B9E;"></span>Muted Purple</td>
+            <td><span class="color-code">#8B7B9E</span></td>
+            <td>Fifth choice</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Typography -->
+    <section>
+      <h2 class="gradient-heading">Typography</h2>
+      <p>Our typography system uses two complementary font families: Inter for headings and Work Sans for body text.</p>
+
+      <h3>Font Hierarchy</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Font</th>
+            <th>Weight</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>H1 / Main Heading</td>
+            <td>Inter</td>
+            <td>Black (900)</td>
+            <td>One per design, use gradient treatment</td>
+          </tr>
+          <tr>
+            <td>H2 / Subheading</td>
+            <td>Inter</td>
+            <td>Medium (500)</td>
+            <td>Section headers, gradient or Zeroe Blue</td>
+          </tr>
+          <tr>
+            <td>Body / Paragraphs</td>
+            <td>Work Sans</td>
+            <td>Regular (400)</td>
+            <td>All body copy, in Charcoal</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Gradient Headline Treatment</h3>
+      <p>This is the <strong>signature visual differentiator</strong> for Zeroe. Large headlines use a horizontal gradient that flows from Zeroe Blue through Muted Purple to Dusty Rose.</p>
+
+      <div class="example-box">
+        <p class="multi-color-example" style="background: linear-gradient(90deg, #2673EA 0%, #8B7B9E 50%, #E07065 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          "Performance, capital, and compliance all live on clean data"
+        </p>
+      </div>
+
+      <div class="highlight-box">
+        <strong>Gradient Specification:</strong><br>
+        Direction: Left to Right (90deg)<br>
+        Start: <span class="color-swatch" style="background: #2673EA;"></span>#2673EA (Zeroe Blue)<br>
+        Middle: <span class="color-swatch" style="background: #8B7B9E;"></span>#8B7B9E (Muted Purple)<br>
+        End: <span class="color-swatch" style="background: #E07065;"></span>#E07065 (Coral/Salmon)
+      </div>
+
+      <h3>Font Sources</h3>
+      <p><strong>Inter:</strong> <a href="https://fonts.google.com/specimen/Inter" class="font-link">fonts.google.com/specimen/Inter</a></p>
+      <p><strong>Work Sans:</strong> <a href="https://fonts.google.com/specimen/Work+Sans" class="font-link">fonts.google.com/specimen/Work+Sans</a></p>
+    </section>
+
+    <!-- Logo Usage -->
+    <section>
+      <h2 class="gradient-heading">Logo Usage</h2>
+      <p>Our logo is the most recognizable element of our brand. Use it consistently to build recognition and trust.</p>
+
+      <h3>Logo Versions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>When to Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>logo-blue</strong></td>
+            <td>Primary logo for light backgrounds</td>
+          </tr>
+          <tr>
+            <td><strong>logo-black</strong></td>
+            <td>Used on light gradient backgrounds</td>
+          </tr>
+          <tr>
+            <td><strong>logo-white</strong></td>
+            <td>For dark backgrounds</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Logo Rules</h3>
+      <ul class="rules-list">
+        <li>Always leave adequate negative space around the logo</li>
+        <li>Logo appears in the top-right corner of presentations</li>
+        <li>On gradient backgrounds, use the black logo</li>
+        <li>Never distort, rotate, or modify logo colors</li>
+      </ul>
+    </section>
+
+    <!-- Signature Gradient -->
+    <section>
+      <h2 class="gradient-heading">Signature Background Gradient</h2>
+      <p>The warm gradient is the most distinctive visual element of the evolved brand. It creates human warmth in an enterprise product.</p>
+
+      <div class="highlight-box">
+        <strong>Direction:</strong> Bottom-left to top-right (135deg)<br><br>
+        <strong>Colors:</strong><br>
+        • Light grey/white base (#F5F5F7 to #FFFFFF)<br>
+        • Soft blue-lavender tint (top-left area)<br>
+        • Warm peach/coral wash (bottom-right, #FDE8E4 to #F9D5CF)
+      </div>
+
+      <h3>Usage Rules</h3>
+      <ul class="rules-list">
+        <li>Apply to all presentation slides as base background</li>
+        <li>Apply to document pages (subtle version)</li>
+        <li>The gradient should feel "barely there" – soft and sophisticated</li>
+        <li>Gradient intensity: 5-15% opacity wash, never saturated</li>
+      </ul>
+
+      <div class="warning-box">
+        <h4>What NOT to Do</h4>
+        <p>Do NOT use solid color backgrounds (except for tables/data sections)</p>
+      </div>
+    </section>
+
+    <!-- Imagery Style -->
+    <section>
+      <h2 class="gradient-heading">Imagery Style</h2>
+      <p>Our imagery creates a unique visual language that sets us apart from generic stock photography.</p>
+
+      <h3>Primary: Abstract 3D Terrain</h3>
+      <p>Our presentations feature distinctive 3D topographic/terrain visualizations: rendered mountain/landscape forms with charcoal/slate peaks transitioning to warm coral/peach/cream valleys. This abstract, data-visualization aesthetic creates a unique visual identity.</p>
+
+      <h3>Secondary: Nature Photography</h3>
+      <p>When using nature photography, prefer winter/snow landscapes (subtle, not vibrant green) with muted, desaturated color treatment. Use sparingly for closing slides or case studies.</p>
+
+      <div class="warning-box">
+        <h4>What NOT to Use</h4>
+        <ul class="rules-list">
+          <li>Generic stock photography</li>
+          <li>Bright green "sustainability" clichés</li>
+          <li>Flat illustrations</li>
+          <li>Overly saturated nature imagery</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Brand Differentiators -->
+    <section>
+      <h2 class="gradient-heading">Brand Differentiators</h2>
+      <p>The evolved Zeroe brand stands out through these key differentiators:</p>
+
+      <div class="diff-grid">
+        <div class="diff-card">
+          <h4>Gradient Headlines</h4>
+          <p>No other sustainability platform uses this distinctive treatment</p>
+        </div>
+        <div class="diff-card">
+          <h4>Warm Gradient Backgrounds</h4>
+          <p>Avoids the cold, clinical blue-grey of competitors</p>
+        </div>
+        <div class="diff-card">
+          <h4>Abstract 3D Terrain</h4>
+          <p>Unique visual language, not generic stock imagery</p>
+        </div>
+        <div class="diff-card">
+          <h4>Sophisticated Palette</h4>
+          <p>Dusty rose, slate, coral vs. typical green/blue sustainability</p>
+        </div>
+        <div class="diff-card">
+          <h4>Human Warmth</h4>
+          <p>Peach/coral tones create approachability in enterprise</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Reference -->
+    <section>
+      <h2 class="gradient-heading">Quick Reference</h2>
+
+      <div class="quick-ref-grid">
+        <div class="quick-ref-card">
+          <h4>Creating Presentations</h4>
+          <ol class="steps-list">
+            <li>Apply signature gradient to all slide backgrounds</li>
+            <li>Place black logo in top-right corner</li>
+            <li>Use gradient treatment for main headlines</li>
+            <li>Section headers in Dusty Rose or Zeroe Blue</li>
+            <li>Body text in charcoal Work Sans</li>
+            <li>Use coral-colored progress indicators</li>
+            <li>Include 3D terrain imagery on cover slides</li>
+          </ol>
+        </div>
+
+        <div class="quick-ref-card">
+          <h4>Creating Documents</h4>
+          <ol class="steps-list">
+            <li>Subtle gradient or white background</li>
+            <li>Gradient headlines for chapter/section titles</li>
+            <li>Zeroe Blue for subheadings</li>
+            <li>Body text in Work Sans Regular, charcoal</li>
+            <li>Tables with blue headers</li>
+          </ol>
+        </div>
+
+        <div class="quick-ref-card">
+          <h4>Creating Data Visualizations</h4>
+          <ol class="steps-list">
+            <li>Primary series in Zeroe Blue</li>
+            <li>Secondary series from accent palette</li>
+            <li>White chart background</li>
+            <li>Clear legends in Work Sans</li>
+            <li>Avoid more than 5 colors per chart</li>
+          </ol>
+        </div>
+
+        <div class="quick-ref-card">
+          <h4>Creating Social Media Content</h4>
+          <ol class="steps-list">
+            <li>Apply gradient background</li>
+            <li>Bold gradient headline treatment</li>
+            <li>Keep text minimal and punchy</li>
+            <li>Include Zeroe logo</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>ZEROE BRAND GUIDELINES 2025 | CONFIDENTIAL</p>
+      <p style="margin-top: 8px; font-style: italic;">Questions about brand usage? Contact the Marketing team.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -4,9 +4,9 @@
 
 ---
 
-## Current Status: **Phase 1 Complete**
+## Current Status: **Phase 2 Complete**
 
-### Active Phase: Phase 2 - Platform Layout & Navigation (Not Started)
+### Active Phase: Phase 3 - Deals Feature (Starting)
 
 ---
 
@@ -16,8 +16,8 @@
 |-------|------|--------|----------|
 | 0 | Project Foundation | ✅ Complete | 100% |
 | 1 | Authentication System | ✅ Complete | 100% |
-| 2 | Platform Layout & Navigation | ⏳ Not Started | 0% |
-| 3 | Deals Feature (Basic) | ⏳ Not Started | 0% |
+| 2 | Platform Layout & Navigation | ✅ Complete | 100% |
+| 3 | Deals Feature (Basic) | 🔄 In Progress | 0% |
 | 4 | Skills CRUD | ⏳ Not Started | 0% |
 | 5 | AI Chat Implementation | ⏳ Not Started | 0% |
 | 6 | Chrome Extension | ⏳ Not Started | 0% |
@@ -40,7 +40,7 @@
 - [x] Set up `apps/extension` (Vite + React)
 - [x] Set up `packages/shared` (TypeScript types)
 - [x] Configure Tailwind with Zeroe brand colors
-- [ ] Set up Supabase project (database + auth) - *Requires manual setup*
+- [x] Set up Supabase project (database + auth)
 - [x] Configure environment variables template
 - [x] Create project documentation (README)
 
@@ -64,18 +64,25 @@
 
 ---
 
-### Phase 2: Platform Layout & Navigation
+### Phase 2: Platform Layout & Navigation ✅
 
-- [ ] Main layout component (sidebar + header)
-- [ ] Sidebar navigation (Deals, Skills, History, Settings)
-- [ ] Header with user menu and sync status
-- [ ] Routing structure for all pages
-- [ ] Empty placeholder pages
-- [ ] Apply Zeroe brand styling throughout
+- [x] Main layout component (sidebar + header)
+- [x] Sidebar navigation (Deals, Skills, History, Settings)
+- [x] Header with user menu and sync status
+- [x] Routing structure for all pages
+- [x] Empty placeholder pages (Deals, Skills, History)
+- [x] Apply Zeroe brand styling throughout
+- [x] Settings page with profile, security sections
+- [x] **API Keys Management** (Added)
+  - [x] Anthropic API key field
+  - [x] HubSpot API key field
+  - [x] Confluence API key field
+  - [x] GET/PUT `/auth/api-keys` endpoints
+  - [x] Masked key display for security
 
 ---
 
-### Phase 3: Deals Feature (Basic)
+### Phase 3: Deals Feature (Basic) 🔄
 
 - [ ] Create deals table migration
 - [ ] HubSpot integration service
@@ -143,7 +150,7 @@
 - [ ] Confluence search by company/deal name
 - [ ] Meeting processor skill integration
 - [ ] Update context assembly for all sources
-- [ ] Settings page for API tokens
+- [x] Settings page for API tokens *(Completed early in Phase 2)*
 - [ ] Token encryption/storage
 - [ ] Test multi-source chat responses
 
@@ -197,6 +204,24 @@
 
 ## Session Log
 
+### January 30, 2026 (Session 3)
+- ✅ **Phase 2 Complete** - Platform Layout & Navigation
+  - Sidebar component with navigation links
+  - Header component with user dropdown menu
+  - AppLayout wrapper component
+  - Placeholder pages for Deals, Skills, History
+  - Settings page with Profile, Security sections
+- ✅ **API Keys Settings Feature** (Added to Phase 2)
+  - Users can add/update/remove their own API keys
+  - Supports Anthropic, HubSpot, and Confluence
+  - Keys are masked when displayed (e.g., `sk-a••••••••xyz`)
+  - Database migration for `anthropic_api_key` column
+  - GET/PUT `/auth/api-keys` endpoints
+- 🔧 **Configuration**
+  - HubSpot API key configured in `.env`
+  - Supabase migration run for API keys
+- **Next**: Phase 3 - Deals Feature
+
 ### January 30, 2026 (Session 2)
 - ✅ **Phase 0 Complete** - Project Foundation
   - Turborepo monorepo structure
@@ -211,7 +236,6 @@
   - Web platform: login, dashboard, change password pages
   - Auth context and protected routes
   - Extension auth sync
-- **Next**: Run migration in Supabase, then Phase 2
 
 ### January 30, 2026 (Session 1)
 - ✅ Initial planning complete
@@ -225,11 +249,7 @@
 
 ## Blockers & Notes
 
-**Action Required**: Run the database migration in Supabase SQL Editor:
-1. Go to https://supabase.com/dashboard/project/ogwupzlixgncahfgcxix/sql
-2. Copy contents of `supabase/migrations/001_users.sql`
-3. Run the SQL
-4. Then run `supabase/seed.sql` to create test user (admin@zeroe.io / admin123)
+*No current blockers.*
 
 ---
 
@@ -237,6 +257,6 @@
 
 - [Final Plan](./Final_Plan.md)
 - [Change Log](./changelog.md)
-- [Project Guidelines](./claude.md)
+- [Project Guidelines](./CLAUDE.md)
 - [Planning Doc](./zeroe-pulse-ai-planning-doc.md)
 - [PRD](./PRD-Draft.json)

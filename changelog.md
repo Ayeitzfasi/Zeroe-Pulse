@@ -4,6 +4,64 @@
 
 ---
 
+## [0.3.0] - 2026-01-30 (Phase 2 Complete + API Keys)
+
+### Added
+- **Platform Layout & Navigation**
+  - `Sidebar.tsx` - Navigation sidebar with links to Deals, Skills, History, Settings
+  - `Header.tsx` - Top header with user dropdown menu and logout
+  - `AppLayout.tsx` - Main layout wrapper combining sidebar + header
+  - Placeholder pages for `/deals`, `/skills`, `/history`
+  - Settings page with Profile, Security, and API Keys sections
+
+- **API Keys Management**
+  - Users can add, update, and remove their own API keys
+  - Anthropic (Claude AI) API key support
+  - HubSpot API key support
+  - Confluence API key support
+  - Keys are masked when displayed for security (e.g., `sk-a••••••••xyz`)
+  - `GET /auth/api-keys` - Retrieve masked API keys
+  - `PUT /auth/api-keys` - Update API keys
+  - Database migration `002_api_keys.sql` for `anthropic_api_key` column
+  - `UserApiKeys` and `UpdateApiKeysRequest` types added to shared package
+
+### Changed
+- Updated `apps/web/src/app/dashboard/page.tsx` to use AppLayout
+- Updated `apps/web/src/app/settings/password/page.tsx` to use AppLayout
+- Fixed Supabase dotenv loading in `apps/api/src/lib/supabase.ts`
+
+---
+
+## [0.2.0] - 2026-01-30 (Phase 1 Complete)
+
+### Added
+- **Authentication System**
+  - `POST /auth/login` - User login with JWT token
+  - `POST /auth/change-password` - Password change for authenticated users
+  - `GET /auth/me` - Get current user profile
+  - JWT generation and validation middleware
+  - bcryptjs password hashing
+
+- **Web Platform Auth**
+  - Login page with Zeroe branding (`/login`)
+  - Dashboard page (`/dashboard`)
+  - Change password page (`/settings/password`)
+  - `AuthContext` for global auth state management
+  - `ProtectedRoute` component for route protection
+  - API client with token management
+
+- **Chrome Extension Auth**
+  - Token storage in `chrome.storage.local`
+  - Auth sync from web platform via content script
+  - Login state detection in sidepanel
+
+- **Database**
+  - `001_users.sql` migration with users table
+  - Row Level Security policies
+  - `seed.sql` with test user (admin@zeroe.io / admin123)
+
+---
+
 ## [0.1.0] - 2026-01-30 (Phase 0 Complete)
 
 ### Added
@@ -113,10 +171,12 @@ When requesting changes, please use this format:
 
 ## Version History
 
-### v0.0.0 - Planning (Current)
-- Initial project planning
-- Documentation structure created
-- Implementation phases defined
+| Version | Date | Description |
+|---------|------|-------------|
+| 0.3.0 | 2026-01-30 | Phase 2 Complete + API Keys Management |
+| 0.2.0 | 2026-01-30 | Phase 1 Complete - Authentication System |
+| 0.1.0 | 2026-01-30 | Phase 0 Complete - Project Foundation |
+| 0.0.0 | 2026-01-30 | Initial Planning |
 
 ---
 

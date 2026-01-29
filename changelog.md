@@ -4,6 +4,47 @@
 
 ---
 
+## [0.4.1] - 2026-01-30 (Phase 3 Enhanced - Deals Improvements)
+
+### Added
+- **Pipeline Selection**
+  - Choose which HubSpot pipeline to sync deals from
+  - Pipeline selector modal on first sync
+  - Clear & Re-sync button to change pipeline
+
+- **Pipeline Filtering** (requires migration 004)
+  - Pipeline filter dropdown in deals list
+  - Pipeline column in deals table
+  - `GET /deals/filters/pipelines` endpoint for distinct pipelines
+
+- **Deal Detail Enhancements**
+  - Contacts section with names, emails, job titles
+  - Companies section with names and domains
+  - Clickable HubSpot links for deals, contacts, companies (EU1 region)
+  - Last engagement date display
+  - Confluence placeholder section
+
+- **Dynamic Stage Filter**
+  - Stage filter now loads stages from the selected HubSpot pipeline
+  - Shows actual stage labels from HubSpot
+
+- **Database Migration 004**
+  - `pipeline_id` and `pipeline_name` columns
+  - `contacts` and `companies` JSONB columns
+  - `hubspot_stage_id` column for filtering
+  - `last_engagement_date` column
+  - `hubspot_config` table for storing sync settings
+
+### Changed
+- Stage badges now use `whitespace-nowrap` to prevent awkward wrapping
+- HubSpot links use EU1 region URL format
+- Improved HubSpot integration to fetch contacts, companies, and owners
+
+### Fixed
+- Stage badge styling for longer stage names
+
+---
+
 ## [0.4.0] - 2026-01-30 (Phase 3 Complete - Deals Feature)
 
 ### Added
@@ -220,6 +261,7 @@ When requesting changes, please use this format:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.4.1 | 2026-01-30 | Phase 3 Enhanced - Pipeline filtering, contacts, companies |
 | 0.4.0 | 2026-01-30 | Phase 3 Complete - Deals Feature with HubSpot Integration |
 | 0.3.0 | 2026-01-30 | Phase 2 Complete + API Keys Management |
 | 0.2.0 | 2026-01-30 | Phase 1 Complete - Authentication System |

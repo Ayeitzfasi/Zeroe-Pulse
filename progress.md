@@ -96,6 +96,18 @@
 - [x] Pagination (25/50/100)
 - [x] Deal detail page (basic info only)
 - [x] Sync button + status indicator
+- [x] **Enhancements (Session 5)**:
+  - [x] Pipeline selection for HubSpot sync
+  - [x] Pipeline filter dropdown (prepared, needs migration)
+  - [x] Pipeline column in deals table (prepared, needs migration)
+  - [x] Contacts section on deal detail with HubSpot links
+  - [x] Companies section on deal detail with HubSpot links
+  - [x] Last engagement date display
+  - [x] Clear & Re-sync button
+  - [x] Dynamic stage filter based on pipeline stages
+  - [x] EU1 region HubSpot links
+  - [x] Confluence placeholder section
+  - [x] Migration 004 for new columns (ready to run)
 
 ---
 
@@ -204,6 +216,22 @@
 ---
 
 ## Session Log
+
+### January 30, 2026 (Session 5)
+- ✅ **Phase 3 Enhanced** - Deals Feature Improvements
+  - Pipeline selection for choosing which HubSpot pipeline to sync
+  - Pipeline filter dropdown for filtering deals list (needs migration)
+  - Pipeline column in deals table (needs migration)
+  - Contacts section on deal detail with clickable HubSpot links
+  - Companies section on deal detail with clickable HubSpot links
+  - Last engagement date display on deal detail
+  - Clear & Re-sync button to reset deals and change pipeline
+  - Dynamic stage filter that loads stages from selected pipeline
+  - Fixed HubSpot links to use EU1 region
+  - Fixed stage badge styling for longer text
+  - Confluence placeholder section on deal detail
+  - Created migration 004 for new columns (pipeline_id, pipeline_name, contacts, companies, etc.)
+- **Next**: Phase 4 - Skills CRUD
 
 ### January 30, 2026 (Session 4)
 - ✅ **Phase 3 Complete** - Deals Feature

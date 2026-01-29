@@ -17,6 +17,12 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(8, 'New password must be at least 8 characters'),
 });
 
+const updateApiKeysSchema = z.object({
+  hubspotToken: z.string().nullable().optional(),
+  confluenceToken: z.string().nullable().optional(),
+  anthropicApiKey: z.string().nullable().optional(),
+});
+
 // POST /auth/login
 router.post('/login', async (req, res, next) => {
   try {
@@ -115,6 +121,50 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res, next) => 
     res.json({
       success: true,
       data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /auth/api-keys - Get masked API keys
+router.get('/api-keys', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const apiKeys = await userService.getApiKeys(req.user!.userId);
+
+    if (!apiKeys) {
+      throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
+    }
+
+    res.json({
+      success: true,
+      data: apiKeys,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /auth/api-keys - Update API keys
+router.put('/api-keys', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const validation = updateApiKeysSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new AppError(400, 'VALIDATION_ERROR', validation.error.errors[0].message);
+    }
+
+    const updated = await userService.updateApiKeys(req.user!.userId, validation.data);
+
+    if (!updated) {
+      throw new AppError(500, 'UPDATE_FAILED', 'Failed to update API keys');
+    }
+
+    // Return the updated (masked) keys
+    const apiKeys = await userService.getApiKeys(req.user!.userId);
+
+    res.json({
+      success: true,
+      data: apiKeys,
     });
   } catch (error) {
     next(error);

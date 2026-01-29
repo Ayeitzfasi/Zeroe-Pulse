@@ -5,8 +5,22 @@ export interface User {
   role: UserRole;
   hubspotToken?: string;
   confluenceToken?: string;
+  anthropicApiKey?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// API keys configuration (masked for display)
+export interface UserApiKeys {
+  hubspotToken: string | null;
+  confluenceToken: string | null;
+  anthropicApiKey: string | null;
+}
+
+export interface UpdateApiKeysRequest {
+  hubspotToken?: string | null;
+  confluenceToken?: string | null;
+  anthropicApiKey?: string | null;
 }
 
 export type UserRole = 'admin' | 'user';

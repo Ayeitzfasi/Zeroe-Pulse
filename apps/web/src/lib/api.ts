@@ -1,4 +1,4 @@
-import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest } from '@zeroe-pulse/shared';
+import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest } from '@zeroe-pulse/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -82,6 +82,17 @@ class ApiClient {
   async changePassword(data: ChangePasswordRequest): Promise<ApiResponse<{ message: string }>> {
     return this.request<{ message: string }>('/auth/change-password', {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getApiKeys(): Promise<ApiResponse<UserApiKeys>> {
+    return this.request<UserApiKeys>('/auth/api-keys');
+  }
+
+  async updateApiKeys(data: UpdateApiKeysRequest): Promise<ApiResponse<UserApiKeys>> {
+    return this.request<UserApiKeys>('/auth/api-keys', {
+      method: 'PUT',
       body: JSON.stringify(data),
     });
   }

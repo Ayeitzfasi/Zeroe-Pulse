@@ -1,13 +1,34 @@
+export interface DealContact {
+  id: string;
+  name: string;
+  email: string | null;
+  jobTitle: string | null;
+}
+
+export interface DealCompany {
+  id: string;
+  name: string;
+  domain: string | null;
+}
+
 export interface Deal {
   id: string;
   hubspotId: string;
   name: string;
   companyName: string;
+  companyId: string | null;
   stage: DealStage;
+  stageLabel: string;
+  hubspotStageId?: string | null;
+  pipelineId?: string | null;
+  pipelineName?: string | null;
   amount: number | null;
   closeDate: string | null;
   ownerName: string | null;
   ownerId: string | null;
+  lastEngagementDate: string | null;
+  contacts: DealContact[];
+  companies: DealCompany[];
   analysis: DealAnalysis | null;
   lastSyncedAt: string;
   createdAt: string;
@@ -59,7 +80,10 @@ export type HealthScore = 'green' | 'yellow' | 'red' | 'unknown';
 export interface DealListParams {
   page?: number;
   limit?: number;
-  stage?: DealStage | 'all';
+  // Accepts normalized stage, 'all', or HubSpot stage ID
+  stage?: DealStage | 'all' | string;
+  // Filter by pipeline ID, or 'all' for all pipelines
+  pipeline?: string;
   search?: string;
   sortBy?: 'name' | 'amount' | 'closeDate' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
@@ -71,4 +95,18 @@ export interface DealListResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface HubSpotPipeline {
+  id: string;
+  label: string;
+  stages: Array<{
+    id: string;
+    label: string;
+  }>;
+}
+
+export interface HubSpotConfig {
+  portalId: number;
+  pipelineId: string;
 }

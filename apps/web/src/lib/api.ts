@@ -1,4 +1,4 @@
-import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest, Deal, DealListParams, DealListResponse, DealStage } from '@zeroe-pulse/shared';
+import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest, Deal, DealListParams, DealListResponse, DealStage, HubSpotPipeline, HubSpotConfig } from '@zeroe-pulse/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -103,6 +103,7 @@ class ApiClient {
     if (params.page) searchParams.set('page', String(params.page));
     if (params.limit) searchParams.set('limit', String(params.limit));
     if (params.stage) searchParams.set('stage', params.stage);
+    if (params.pipeline) searchParams.set('pipeline', params.pipeline);
     if (params.search) searchParams.set('search', params.search);
     if (params.sortBy) searchParams.set('sortBy', params.sortBy);
     if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
@@ -111,8 +112,12 @@ class ApiClient {
     return this.request<DealListResponse>(`/deals${query ? `?${query}` : ''}`);
   }
 
-  async getDeal(id: string): Promise<ApiResponse<Deal>> {
-    return this.request<Deal>(`/deals/${id}`);
+  async getDeal(id: string): Promise<ApiResponse<{ deal: Deal; hubspotConfig: HubSpotConfig | null }>> {
+    return this.request<{ deal: Deal; hubspotConfig: HubSpotConfig | null }>(`/deals/${id}`);
+  }
+
+  async getDistinctPipelines(): Promise<ApiResponse<Array<{ id: string; name: string }>>> {
+    return this.request<Array<{ id: string; name: string }>>('/deals/filters/pipelines');
   }
 
   async getDealStats(): Promise<ApiResponse<{
@@ -125,6 +130,27 @@ class ApiClient {
       byStage: Record<DealStage, number>;
       totalValue: number;
     }>('/deals/stats');
+  }
+
+  async getHubSpotConfig(): Promise<ApiResponse<HubSpotConfig | null>> {
+    return this.request<HubSpotConfig | null>('/deals/config');
+  }
+
+  async saveHubSpotConfig(config: HubSpotConfig & { pipelineName?: string }): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>('/deals/config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async getHubSpotPipelines(): Promise<ApiResponse<{
+    portalId: number;
+    pipelines: HubSpotPipeline[];
+  }>> {
+    return this.request<{
+      portalId: number;
+      pipelines: HubSpotPipeline[];
+    }>('/deals/pipelines');
   }
 
   async syncDeals(): Promise<ApiResponse<{
@@ -140,6 +166,12 @@ class ApiClient {
       updated: number;
     }>('/deals/sync', {
       method: 'POST',
+    });
+  }
+
+  async deleteAllDeals(): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>('/deals', {
+      method: 'DELETE',
     });
   }
 }

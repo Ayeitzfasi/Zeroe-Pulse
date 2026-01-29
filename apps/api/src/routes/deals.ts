@@ -4,7 +4,6 @@ import * as dealService from '../services/dealService.js';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createHubSpotClient } from '../integrations/hubspot.js';
-import * as userService from '../services/userService.js';
 
 const router = Router();
 
@@ -12,11 +11,38 @@ const router = Router();
 const listParamsSchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   limit: z.coerce.number().min(1).max(100).optional().default(25),
-  stage: z.enum(['all', 'qualified', 'discovery', 'demo', 'proposal', 'negotiation', 'closed_won', 'closed_lost']).optional().default('all'),
+  // Allow any stage string to support HubSpot pipeline stage IDs
+  stage: z.string().optional().default('all'),
+  // Filter by pipeline ID
+  pipeline: z.string().optional().default('all'),
   search: z.string().optional().default(''),
   sortBy: z.enum(['name', 'amount', 'closeDate', 'updatedAt']).optional().default('updatedAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
+
+const configSchema = z.object({
+  portalId: z.number(),
+  pipelineId: z.string(),
+  pipelineName: z.string().optional(),
+});
+
+// Helper to get HubSpot client
+async function getHubSpotClient(userId: string): Promise<ReturnType<typeof createHubSpotClient>> {
+  const { supabase } = await import('../lib/supabase.js');
+  const { data: userData } = await supabase
+    .from('users')
+    .select('hubspot_token')
+    .eq('id', userId)
+    .single();
+
+  const hubspotApiKey = userData?.hubspot_token || process.env.HUBSPOT_API_KEY;
+
+  if (!hubspotApiKey) {
+    throw new AppError(400, 'HUBSPOT_NOT_CONFIGURED', 'HubSpot API key not configured. Please add your API key in Settings.');
+  }
+
+  return createHubSpotClient(hubspotApiKey);
+}
 
 // GET /deals - List deals with pagination and filtering
 router.get('/', authenticate, async (req: AuthenticatedRequest, res, next) => {
@@ -51,6 +77,86 @@ router.get('/stats', authenticate, async (req: AuthenticatedRequest, res, next) 
   }
 });
 
+// GET /deals/filters/pipelines - Get distinct pipelines for filtering
+router.get('/filters/pipelines', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const pipelines = await dealService.getDistinctPipelines();
+
+    res.json({
+      success: true,
+      data: pipelines,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /deals/config - Get HubSpot configuration
+router.get('/config', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const config = await dealService.getHubSpotConfig();
+
+    res.json({
+      success: true,
+      data: config,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /deals/config - Save HubSpot configuration
+router.put('/config', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const validation = configSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new AppError(400, 'VALIDATION_ERROR', validation.error.errors[0].message);
+    }
+
+    await dealService.saveHubSpotConfig(validation.data);
+
+    res.json({
+      success: true,
+      data: { message: 'Configuration saved' },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /deals/pipelines - Get available HubSpot pipelines
+router.get('/pipelines', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const hubspotClient = await getHubSpotClient(req.user!.userId);
+    const pipelines = await hubspotClient.getPipelines();
+
+    // Also get the portal ID
+    const portalId = await hubspotClient.getPortalId();
+
+    res.json({
+      success: true,
+      data: {
+        portalId,
+        pipelines: pipelines.map(p => ({
+          id: p.id,
+          label: p.label,
+          stages: p.stages.map(s => ({
+            id: s.id,
+            label: s.label,
+          })),
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching pipelines:', error);
+    if (error instanceof AppError) {
+      next(error);
+    } else {
+      next(new AppError(500, 'FETCH_FAILED', `Failed to fetch pipelines: ${(error as Error).message}`));
+    }
+  }
+});
+
 // GET /deals/:id - Get single deal
 router.get('/:id', authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
@@ -61,9 +167,15 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res, next) =>
       throw new AppError(404, 'DEAL_NOT_FOUND', 'Deal not found');
     }
 
+    // Get config for portal ID
+    const config = await dealService.getHubSpotConfig();
+
     res.json({
       success: true,
-      data: deal,
+      data: {
+        deal,
+        hubspotConfig: config,
+      },
     });
   } catch (error) {
     next(error);
@@ -73,27 +185,40 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res, next) =>
 // POST /deals/sync - Sync deals from HubSpot
 router.post('/sync', authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
-    // Get HubSpot API key - first check user's personal key, then fall back to env
-    const userId = req.user!.userId;
+    const hubspotClient = await getHubSpotClient(req.user!.userId);
 
-    // Try to get user's personal HubSpot token from database
-    const { data: userData } = await (await import('../lib/supabase.js')).supabase
-      .from('users')
-      .select('hubspot_token')
-      .eq('id', userId)
-      .single();
+    // Get or create config
+    let config = await dealService.getHubSpotConfig();
 
-    const hubspotApiKey = userData?.hubspot_token || process.env.HUBSPOT_API_KEY;
+    if (!config) {
+      // First time sync - need to get portal ID and pipeline info
+      const portalId = await hubspotClient.getPortalId();
+      const pipelines = await hubspotClient.getPipelines();
 
-    if (!hubspotApiKey) {
-      throw new AppError(400, 'HUBSPOT_NOT_CONFIGURED', 'HubSpot API key not configured. Please add your API key in Settings.');
+      // If no pipeline configured, return pipelines for user to select
+      if (pipelines.length === 0) {
+        throw new AppError(400, 'NO_PIPELINES', 'No deal pipelines found in HubSpot');
+      }
+
+      // For now, use the first pipeline if not configured
+      // In production, you'd want the user to select this
+      const defaultPipeline = pipelines[0];
+
+      config = {
+        portalId,
+        pipelineId: defaultPipeline.id,
+      };
+
+      await dealService.saveHubSpotConfig({
+        ...config,
+        pipelineName: defaultPipeline.label,
+      });
     }
 
-    // Create HubSpot client and sync deals
-    const hubspotClient = createHubSpotClient(hubspotApiKey);
+    console.log(`Starting HubSpot sync for pipeline ${config.pipelineId}...`);
 
-    console.log('Starting HubSpot sync...');
-    const normalizedDeals = await hubspotClient.syncDeals();
+    // Sync deals from the configured pipeline
+    const normalizedDeals = await hubspotClient.syncDeals(config.pipelineId);
     console.log(`Fetched ${normalizedDeals.length} deals from HubSpot`);
 
     // Upsert deals to database
@@ -116,6 +241,20 @@ router.post('/sync', authenticate, async (req: AuthenticatedRequest, res, next) 
     } else {
       next(new AppError(500, 'SYNC_FAILED', `Failed to sync deals: ${(error as Error).message}`));
     }
+  }
+});
+
+// DELETE /deals - Clear all deals (for re-sync)
+router.delete('/', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    await dealService.deleteAllDeals();
+
+    res.json({
+      success: true,
+      data: { message: 'All deals deleted' },
+    });
+  } catch (error) {
+    next(error);
   }
 });
 

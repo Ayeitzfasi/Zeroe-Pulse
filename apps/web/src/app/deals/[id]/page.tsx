@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout';
 import { api } from '@/lib/api';
-import type { Deal, DealStage } from '@zeroe-pulse/shared';
+import type { Deal, DealStage, HubSpotConfig } from '@zeroe-pulse/shared';
 
 const STAGE_LABELS: Record<DealStage, string> = {
   qualified: 'Qualified',
@@ -47,7 +47,8 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-function formatDateTime(dateStr: string): string {
+function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return '-';
   return new Date(dateStr).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -57,11 +58,28 @@ function formatDateTime(dateStr: string): string {
   });
 }
 
+function formatShortDate(dateStr: string | null): string {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+// Build HubSpot URL - EU1 region
+function getHubSpotUrl(portalId: number | undefined, objectType: string, objectId: string): string {
+  if (!portalId) return '#';
+  // EU1 region uses app-eu1.hubspot.com
+  return `https://app-eu1.hubspot.com/contacts/${portalId}/record/${objectType}/${objectId}`;
+}
+
 export default function DealDetailPage() {
   const params = useParams();
   const dealId = params.id as string;
 
   const [deal, setDeal] = useState<Deal | null>(null);
+  const [config, setConfig] = useState<HubSpotConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -73,7 +91,8 @@ export default function DealDetailPage() {
       const result = await api.getDeal(dealId);
 
       if (result.success && result.data) {
-        setDeal(result.data);
+        setDeal(result.data.deal);
+        setConfig(result.data.hubspotConfig);
       } else {
         setError(result.error?.message || 'Failed to load deal');
       }
@@ -135,6 +154,8 @@ export default function DealDetailPage() {
     );
   }
 
+  const portalId = config?.portalId;
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -155,7 +176,7 @@ export default function DealDetailPage() {
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-heading font-bold text-charcoal">{deal.name}</h1>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${STAGE_COLORS[deal.stage]}`}>
-                {STAGE_LABELS[deal.stage]}
+                {deal.stageLabel || STAGE_LABELS[deal.stage]}
               </span>
             </div>
             {deal.companyName && (
@@ -185,9 +206,108 @@ export default function DealDetailPage() {
                 </div>
                 <div>
                   <dt className="text-sm text-slate-blue">Stage</dt>
-                  <dd className="text-lg font-medium text-charcoal">{STAGE_LABELS[deal.stage]}</dd>
+                  <dd className="text-lg font-medium text-charcoal">{deal.stageLabel || STAGE_LABELS[deal.stage]}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-slate-blue">Last Engagement</dt>
+                  <dd className="text-lg font-medium text-charcoal">{formatShortDate(deal.lastEngagementDate)}</dd>
                 </div>
               </dl>
+            </div>
+
+            {/* Associated Contacts */}
+            <div className="card">
+              <h2 className="text-lg font-heading font-bold text-charcoal mb-4">
+                Contacts ({deal.contacts?.length || 0})
+              </h2>
+              {deal.contacts && deal.contacts.length > 0 ? (
+                <div className="space-y-3">
+                  {deal.contacts.map((contact) => (
+                    <div
+                      key={contact.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-zeroe-blue/10 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-zeroe-blue">
+                            {contact.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-charcoal">{contact.name}</p>
+                          {contact.jobTitle && (
+                            <p className="text-sm text-slate-blue">{contact.jobTitle}</p>
+                          )}
+                          {contact.email && (
+                            <p className="text-sm text-slate-400">{contact.email}</p>
+                          )}
+                        </div>
+                      </div>
+                      {portalId && (
+                        <a
+                          href={getHubSpotUrl(portalId, '0-1', contact.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-zeroe-blue hover:text-zeroe-blue-dark flex items-center gap-1"
+                        >
+                          View
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-blue text-sm">No contacts associated with this deal.</p>
+              )}
+            </div>
+
+            {/* Associated Companies */}
+            <div className="card">
+              <h2 className="text-lg font-heading font-bold text-charcoal mb-4">
+                Companies ({deal.companies?.length || 0})
+              </h2>
+              {deal.companies && deal.companies.length > 0 ? (
+                <div className="space-y-3">
+                  {deal.companies.map((company) => (
+                    <div
+                      key={company.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <span className="text-sm font-bold text-orange-600">
+                            {company.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-charcoal">{company.name}</p>
+                          {company.domain && (
+                            <p className="text-sm text-slate-blue">{company.domain}</p>
+                          )}
+                        </div>
+                      </div>
+                      {portalId && (
+                        <a
+                          href={getHubSpotUrl(portalId, '0-2', company.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-zeroe-blue hover:text-zeroe-blue-dark flex items-center gap-1"
+                        >
+                          View
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-blue text-sm">No companies associated with this deal.</p>
+              )}
             </div>
 
             {/* AI Analysis Placeholder */}
@@ -195,7 +315,6 @@ export default function DealDetailPage() {
               <h2 className="text-lg font-heading font-bold text-charcoal mb-4">AI Analysis</h2>
               {deal.analysis ? (
                 <div>
-                  {/* Analysis will be displayed here in Phase 8 */}
                   <p className="text-slate-blue">Analysis data available</p>
                 </div>
               ) : (
@@ -248,13 +367,17 @@ export default function DealDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Stats */}
+            {/* Quick Info */}
             <div className="card">
               <h2 className="text-lg font-heading font-bold text-charcoal mb-4">Quick Info</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-blue">HubSpot ID</span>
                   <span className="text-sm font-mono text-charcoal">{deal.hubspotId}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                  <span className="text-sm text-slate-blue">Last Engagement</span>
+                  <span className="text-sm text-charcoal">{formatShortDate(deal.lastEngagementDate)}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-blue">Last Synced</span>
@@ -276,16 +399,38 @@ export default function DealDetailPage() {
               <h2 className="text-lg font-heading font-bold text-charcoal mb-4">Actions</h2>
               <div className="space-y-2">
                 <a
-                  href={`https://app.hubspot.com/contacts/deals/${deal.hubspotId}`}
+                  href={portalId ? getHubSpotUrl(portalId, '0-3', deal.hubspotId) : '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-secondary w-full flex items-center justify-center gap-2"
+                  className={`btn-secondary w-full flex items-center justify-center gap-2 ${!portalId ? 'opacity-50 pointer-events-none' : ''}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                   View in HubSpot
                 </a>
+              </div>
+            </div>
+
+            {/* Confluence Link Placeholder */}
+            <div className="card">
+              <h2 className="text-lg font-heading font-bold text-charcoal mb-4">Documentation</h2>
+              <div className="text-center py-6 bg-slate-50 rounded-lg">
+                <svg
+                  className="w-10 h-10 text-slate-300 mx-auto mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p className="text-sm text-slate-blue mb-1">Confluence Integration</p>
+                <p className="text-xs text-slate-400">Coming in Phase 7</p>
               </div>
             </div>
           </div>

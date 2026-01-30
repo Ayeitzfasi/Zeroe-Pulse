@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout';
+import { ChatPanel } from '@/components/chat';
 import { api } from '@/lib/api';
-import type { Deal, DealStage, HubSpotConfig } from '@zeroe-pulse/shared';
+import type { Deal, DealStage, HubSpotConfig, Message } from '@zeroe-pulse/shared';
 
 const STAGE_LABELS: Record<DealStage, string> = {
   qualified: 'Qualified',
@@ -82,6 +83,9 @@ export default function DealDetailPage() {
   const [config, setConfig] = useState<HubSpotConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     const loadDeal = async () => {
@@ -102,6 +106,30 @@ export default function DealDetailPage() {
 
     loadDeal();
   }, [dealId]);
+
+  // Load existing conversation for this deal
+  useEffect(() => {
+    const loadConversation = async () => {
+      const result = await api.getConversations({ type: 'deal', dealId, limit: 1 });
+      if (result.success && result.data && result.data.conversations.length > 0) {
+        const conv = result.data.conversations[0];
+        setConversationId(conv.id);
+        // Load messages for this conversation
+        const convResult = await api.getConversation(conv.id);
+        if (convResult.success && convResult.data) {
+          setMessages(convResult.data.messages);
+        }
+      }
+    };
+
+    if (dealId) {
+      loadConversation();
+    }
+  }, [dealId]);
+
+  const handleConversationCreated = (id: string) => {
+    setConversationId(id);
+  };
 
   if (isLoading) {
     return (
@@ -340,28 +368,68 @@ export default function DealDetailPage() {
               )}
             </div>
 
-            {/* AI Chat Placeholder */}
+            {/* AI Chat */}
             <div className="card">
-              <h2 className="text-lg font-heading font-bold text-charcoal mb-4">AI Chat</h2>
-              <div className="text-center py-8 bg-slate-50 rounded-lg">
-                <svg
-                  className="w-12 h-12 text-slate-300 mx-auto mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-heading font-bold text-charcoal">AI Chat</h2>
+                <button
+                  onClick={() => setShowChat(!showChat)}
+                  className="text-sm text-zeroe-blue hover:text-zeroe-blue-dark flex items-center gap-1"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <p className="text-slate-blue mb-2">AI Chat coming soon</p>
-                <p className="text-sm text-slate-400">
-                  Ask questions about this deal in Phase 5
-                </p>
+                  {showChat ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      Collapse
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                      Expand
+                    </>
+                  )}
+                </button>
               </div>
+
+              {!showChat ? (
+                <div
+                  className="text-center py-8 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => setShowChat(true)}
+                >
+                  <svg
+                    className="w-12 h-12 text-zeroe-blue/50 mx-auto mb-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <p className="text-charcoal font-medium mb-1">Ask AI about this deal</p>
+                  <p className="text-sm text-slate-blue">
+                    Get insights, analysis, and suggestions based on deal context
+                  </p>
+                </div>
+              ) : (
+                <div className="h-[500px] -mx-4 -mb-4 border-t border-slate-200">
+                  <ChatPanel
+                    conversationId={conversationId}
+                    conversationType="deal"
+                    initialMessages={messages}
+                    dealId={dealId}
+                    onConversationCreated={handleConversationCreated}
+                    placeholder="Ask about this deal..."
+                    className="h-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

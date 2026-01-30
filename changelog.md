@@ -48,10 +48,19 @@
   - Custom CSS for proper spacing (headers, lists, paragraphs)
   - Code block styling
 
+- **Skill Creation from Extension**
+  - Added `skillsApi` to extension with `createSkill` and `getSkills` methods
+  - Skills are saved with `source: 'extension'` for tracking
+  - Automatic detection of `<skill_ready>` tags in AI responses
+  - Purple "Skill Ready" notification with Save/Dismiss buttons
+  - One-click saving of AI-generated skills to user's account
+
 ### Changed
 - Background script now manages side panel open state per tab
 - Side panel notifies background on open/close for state tracking
 - Extension icons regenerated with gradient design
+- Updated `general` and `deal` system prompts to support skill creation
+- AI now generates skills with `<skill_ready>` tags when asked to create skills
 
 ---
 

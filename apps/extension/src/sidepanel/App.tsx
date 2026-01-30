@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { api, type Message, type Deal, type Contact, type Company } from '../lib/api';
+import { api, skillsApi, type Message, type Deal, type Contact, type Company } from '../lib/api';
 import { ActionModal, type TaskData, type NoteData } from './components/ActionModal';
 
 interface HubSpotContext {
@@ -11,7 +11,42 @@ interface HubSpotContext {
   portalId: string | null;
 }
 
+interface ParsedSkill {
+  name: string;
+  description: string;
+  content: string;
+}
+
 const WEB_URL = 'http://localhost:3000';
+
+// Parse skill_ready tags from message content
+function parseSkillFromContent(content: string): ParsedSkill | null {
+  const match = content.match(/<skill_ready>([\s\S]*?)<\/skill_ready>/);
+  if (!match) return null;
+
+  const skillContent = match[1].trim();
+
+  // Extract name from first heading or first line
+  const nameMatch = skillContent.match(/^#\s+(.+)$/m) || skillContent.match(/^(.+)$/m);
+  const name = nameMatch ? nameMatch[1].trim() : 'Untitled Skill';
+
+  // Extract description from content after name (first paragraph)
+  const lines = skillContent.split('\n').filter(l => l.trim());
+  let description = '';
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line && !line.startsWith('#') && !line.startsWith('-') && !line.startsWith('*')) {
+      description = line.substring(0, 200);
+      break;
+    }
+  }
+
+  return {
+    name: name.replace(/^#\s*/, ''),
+    description: description || 'AI-generated skill',
+    content: skillContent,
+  };
+}
 
 // Clean skill_ready tags from message content
 function cleanMessageContent(content: string): string {
@@ -20,7 +55,7 @@ function cleanMessageContent(content: string): string {
   if (hasSkillReady && cleaned.trim()) {
     cleaned = cleaned.trim();
   } else if (hasSkillReady) {
-    cleaned = 'Skill ready! View it in the web platform.';
+    cleaned = 'Skill ready! Click "Save Skill" to save it.';
   }
   return cleaned;
 }
@@ -50,6 +85,10 @@ export default function App() {
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [actionType, setActionType] = useState<'task' | 'note'>('task');
   const [actionSuccess, setActionSuccess] = useState('');
+
+  // Skill saving state
+  const [pendingSkill, setPendingSkill] = useState<ParsedSkill | null>(null);
+  const [isSavingSkill, setIsSavingSkill] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -328,6 +367,12 @@ export default function App() {
         result.data!.userMessage,
         result.data!.assistantMessage,
       ]);
+
+      // Check for skill in the response
+      const skill = parseSkillFromContent(result.data!.assistantMessage.content);
+      if (skill) {
+        setPendingSkill(skill);
+      }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         // Request was cancelled - remove optimistic message
@@ -357,6 +402,37 @@ export default function App() {
 
   // Check if chat should be enabled
   const canChat = deal || contact || company || (context?.type && context.hubspotId);
+
+  // Save pending skill
+  const handleSaveSkill = async () => {
+    if (!pendingSkill || isSavingSkill) return;
+
+    setIsSavingSkill(true);
+    try {
+      const result = await skillsApi.createSkill({
+        name: pendingSkill.name,
+        description: pendingSkill.description,
+        prompt: pendingSkill.content,
+        source: 'extension',
+      });
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to save skill');
+      }
+
+      setActionSuccess(`Skill "${pendingSkill.name}" saved successfully!`);
+      setPendingSkill(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save skill');
+    } finally {
+      setIsSavingSkill(false);
+    }
+  };
+
+  const dismissSkill = () => {
+    setPendingSkill(null);
+  };
 
   // Get current record info for actions
   const currentRecordName = deal?.name || (contact ? `${contact.firstName} ${contact.lastName}` : company?.name) || context?.name || 'Record';
@@ -583,6 +659,37 @@ export default function App() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             {actionSuccess}
+          </div>
+        )}
+
+        {/* Pending skill notification */}
+        {pendingSkill && (
+          <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 flex-shrink-0 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-purple-800">Skill Ready</p>
+                <p className="text-xs text-purple-600 truncate">{pendingSkill.name}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={handleSaveSkill}
+                disabled={isSavingSkill}
+                className="flex-1 px-2 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-xs rounded transition-colors"
+              >
+                {isSavingSkill ? 'Saving...' : 'Save Skill'}
+              </button>
+              <button
+                onClick={dismissSkill}
+                disabled={isSavingSkill}
+                className="px-2 py-1 bg-white hover:bg-purple-50 text-purple-600 text-xs rounded border border-purple-200 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         )}
       </header>

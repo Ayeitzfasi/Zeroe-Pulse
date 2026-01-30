@@ -180,6 +180,9 @@
   - [x] HubSpot actions (Create Task, Log Note) with confirmation modals
   - [x] Request cancellation (stop button during AI processing)
   - [x] Markdown formatting for AI responses
+  - [x] Skill creation from extension (save skills directly to platform)
+  - [x] Skill detection with `<skill_ready>` tags in AI responses
+  - [x] Skills API integration in extension
 
 ---
 
@@ -262,6 +265,12 @@
   - HubSpot actions (Create Task, Log Note) with confirmation modals
   - Request cancellation with stop button during AI processing
   - Markdown formatting for AI responses with proper spacing
+  - **Skill creation from extension**:
+    - Added Skills API to extension (`createSkill`, `getSkills`)
+    - Added skill detection in AI responses (`<skill_ready>` tags)
+    - Added "Skill Ready" notification with Save/Dismiss buttons
+    - Updated API system prompts to support skill creation in all conversation types
+    - Skills saved from extension have `source: 'extension'`
 - **Next**: Skill picker drawer, final polish
 
 ### January 30, 2026 (Session 6)

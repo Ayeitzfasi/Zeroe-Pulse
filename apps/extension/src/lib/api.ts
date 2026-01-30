@@ -220,4 +220,39 @@ export const api = {
   },
 };
 
-export type { Message, Conversation, Deal, Contact, Company, SendMessageResponse };
+// Skills
+interface Skill {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  prompt: string;
+  isShared: boolean;
+  source: 'manual' | 'import' | 'ai_generated' | 'extension';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const skillsApi = {
+  async createSkill(data: {
+    name: string;
+    description?: string;
+    prompt: string;
+    isShared?: boolean;
+    source?: 'manual' | 'import' | 'ai_generated' | 'extension';
+  }) {
+    return request<Skill>('/skills', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        source: data.source || 'extension',
+      }),
+    });
+  },
+
+  async getSkills() {
+    return request<{ skills: Skill[]; total: number }>('/skills');
+  },
+};
+
+export type { Message, Conversation, Deal, Contact, Company, SendMessageResponse, Skill };

@@ -71,6 +71,22 @@ export default function App() {
 
   // Request context from content script
   const requestContext = useCallback(() => {
+    // First, try to get stored context from background
+    chrome.runtime.sendMessage({ type: 'GET_CURRENT_CONTEXT' }, (response) => {
+      if (response?.context) {
+        setContext(prevContext => {
+          // Only update if context actually changed
+          if (!prevContext ||
+              prevContext.type !== response.context.type ||
+              prevContext.hubspotId !== response.context.hubspotId) {
+            return response.context;
+          }
+          return prevContext;
+        });
+      }
+    });
+
+    // Also request fresh context from content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'REQUEST_CONTEXT' }).catch(() => {
@@ -157,13 +173,46 @@ export default function App() {
     loadRecordData();
   }, [context, isAuthenticated, cancelRequest, resetChatState]);
 
+  // Notify background that side panel is open
+  useEffect(() => {
+    // Get current tab and notify background
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.runtime.sendMessage({ type: 'SIDE_PANEL_OPENED', tabId: tabs[0].id });
+      }
+    });
+
+    // Notify when closing (beforeunload)
+    const handleUnload = () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.runtime.sendMessage({ type: 'SIDE_PANEL_CLOSED', tabId: tabs[0].id });
+        }
+      });
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      handleUnload();
+    };
+  }, []);
+
   useEffect(() => {
     checkAuth();
 
     // Listen for context updates and auth changes
     const listener = (message: { type: string; context?: HubSpotContext; token?: string }) => {
       if (message.type === 'HUBSPOT_CONTEXT_UPDATE' && message.context) {
-        setContext(message.context);
+        setContext(prevContext => {
+          // Only update if context actually changed
+          if (!prevContext ||
+              prevContext.type !== message.context!.type ||
+              prevContext.hubspotId !== message.context!.hubspotId) {
+            return message.context!;
+          }
+          return prevContext;
+        });
       }
       if (message.type === 'AUTH_TOKEN_UPDATED') {
         setIsAuthenticated(!!message.token);
@@ -174,6 +223,12 @@ export default function App() {
 
     // Request context on load
     requestContext();
+
+    // Poll for context changes every 1.5 seconds
+    // This catches SPA navigation that message passing might miss
+    const pollInterval = setInterval(() => {
+      requestContext();
+    }, 1500);
 
     // Listen for tab changes and visibility changes
     const handleVisibilityChange = () => {
@@ -192,6 +247,7 @@ export default function App() {
 
     return () => {
       chrome.runtime.onMessage.removeListener(listener);
+      clearInterval(pollInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
@@ -366,10 +422,12 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
-        <img src="/icons/icon-48.png" alt="Pulse AI" className="w-12 h-12 mb-4" />
-        <h1 className="text-xl font-heading font-bold text-charcoal mb-2">
-          Pulse AI
-        </h1>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-2 w-8 bg-zeroe-gradient rounded-full" />
+          <h1 className="text-xl font-heading font-bold text-charcoal">
+            Pulse AI
+          </h1>
+        </div>
         <p className="text-slate-blue text-sm text-center mb-4">
           Sign in to use the extension
         </p>
@@ -394,8 +452,8 @@ export default function App() {
       <header className="bg-white border-b border-slate-200 p-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/icons/icon-48.png" alt="" className="w-6 h-6" />
-            <span className="font-heading font-bold text-zeroe-blue text-sm">
+            <div className="h-1.5 w-6 bg-zeroe-gradient rounded-full" />
+            <span className="font-heading font-bold text-charcoal text-sm">
               Pulse AI
             </span>
           </div>

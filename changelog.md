@@ -4,6 +4,57 @@
 
 ---
 
+## [0.7.0] - 2026-01-30 (Phase 6 In Progress - Chrome Extension)
+
+### Added
+- **Improved Context Detection**
+  - Background script listens for tab URL changes (`chrome.tabs.onUpdated`)
+  - Background script listens for tab activation (`chrome.tabs.onActivated`)
+  - Context stored in `chrome.storage.local` for persistence
+  - Side panel polls for context changes every 1.5 seconds
+  - Reliable SPA navigation detection for HubSpot
+
+- **Floating Tab Toggle**
+  - Floating tab now toggles side panel open/close (not just open)
+  - Uses `chrome.sidePanel.close()` API (Chrome 116+)
+  - State tracking in background script
+
+- **Logo Updates**
+  - Side panel header uses gradient bar + "Pulse AI" text (matches platform)
+  - Login screen uses same gradient bar styling
+  - Generated gradient bar extension icons (16x16, 48x48, 128x128)
+  - Icons use Zeroe gradient (blue → purple → coral)
+
+- **Contact & Company Support**
+  - Detect contact pages (0-1 object type)
+  - Detect company pages (0-2 object type)
+  - Fetch associated deals for contacts/companies
+  - Display record info in side panel header
+
+- **HubSpot Actions**
+  - Create Task button with confirmation modal
+  - Log Note button with confirmation modal
+  - Task fields: subject, body, due date, priority
+  - Note fields: body text
+  - Success notifications after actions
+
+- **Request Cancellation**
+  - Stop button appears during AI processing
+  - Uses AbortController to cancel fetch requests
+  - Cleans up optimistic messages on cancel
+
+- **Markdown Formatting**
+  - ReactMarkdown with remark-gfm for AI responses
+  - Custom CSS for proper spacing (headers, lists, paragraphs)
+  - Code block styling
+
+### Changed
+- Background script now manages side panel open state per tab
+- Side panel notifies background on open/close for state tracking
+- Extension icons regenerated with gradient design
+
+---
+
 ## [0.6.1] - 2026-01-30 (Phase 5 Enhanced - HubSpot Engagements & Skill Execution)
 
 ### Added
@@ -373,6 +424,7 @@ When requesting changes, please use this format:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.7.0 | 2026-01-30 | Phase 6 In Progress - Chrome Extension Enhancements |
 | 0.6.1 | 2026-01-30 | Phase 5 Enhanced - HubSpot Engagements & Skill Execution |
 | 0.6.0 | 2026-01-30 | Phase 5 Complete - AI Chat Implementation |
 | 0.5.0 | 2026-01-30 | Phase 4 & 9 Complete - Skills CRUD & AI Skill Creation |

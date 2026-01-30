@@ -94,8 +94,8 @@ function createFloatingTab() {
   const tabButton = document.getElementById('zeroe-pulse-tab-button');
   if (tabButton) {
     tabButton.addEventListener('click', () => {
-      // Send message to background to open side panel
-      chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' });
+      // Send message to background to toggle side panel
+      chrome.runtime.sendMessage({ type: 'TOGGLE_SIDE_PANEL' });
     });
   }
 }

@@ -8,7 +8,7 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Listen for messages from content scripts
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_AUTH_TOKEN') {
     chrome.storage.local.get(['authToken'], (result) => {
       sendResponse({ token: result.authToken || null });
@@ -37,6 +37,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       context: message.context,
     });
     sendResponse({ received: true });
+    return true;
+  }
+
+  if (message.type === 'OPEN_SIDE_PANEL') {
+    // Open side panel from floating tab click
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      chrome.sidePanel.open({ tabId });
+    }
+    sendResponse({ success: true });
     return true;
   }
 });

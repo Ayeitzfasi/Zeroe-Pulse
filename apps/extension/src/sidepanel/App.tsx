@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { api, type Message, type Deal, type Contact, type Company } from '../lib/api';
+import { ActionModal, type TaskData, type NoteData } from './components/ActionModal';
 
 interface HubSpotContext {
   type: 'deal' | 'contact' | 'company' | null;
@@ -44,6 +45,11 @@ export default function App() {
 
   // Abort controller for canceling requests
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Action modal state
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [actionType, setActionType] = useState<'task' | 'note'>('task');
+  const [actionSuccess, setActionSuccess] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -296,6 +302,58 @@ export default function App() {
   // Check if chat should be enabled
   const canChat = deal || contact || company || (context?.type && context.hubspotId);
 
+  // Get current record info for actions
+  const currentRecordName = deal?.name || (contact ? `${contact.firstName} ${contact.lastName}` : company?.name) || context?.name || 'Record';
+  const currentRecordType = deal ? 'deal' : contact ? 'contact' : company ? 'company' : context?.type || null;
+  const currentRecordId = deal?.hubspotId || contact?.hubspotId || company?.hubspotId || context?.hubspotId || null;
+
+  // Handle HubSpot actions
+  const handleCreateTask = () => {
+    setActionType('task');
+    setActionModalOpen(true);
+  };
+
+  const handleLogNote = () => {
+    setActionType('note');
+    setActionModalOpen(true);
+  };
+
+  const handleActionConfirm = async (data: TaskData | NoteData) => {
+    if (!currentRecordType || !currentRecordId) {
+      throw new Error('No record selected');
+    }
+
+    if ('subject' in data) {
+      // Task
+      const result = await api.createTask({
+        subject: data.subject,
+        body: data.body || undefined,
+        dueDate: data.dueDate || undefined,
+        priority: data.priority,
+        associatedObjectType: currentRecordType as 'deal' | 'contact' | 'company',
+        associatedObjectId: currentRecordId,
+      });
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to create task');
+      }
+      setActionSuccess('Task created successfully!');
+    } else {
+      // Note
+      const result = await api.createNote({
+        body: data.body,
+        associatedObjectType: currentRecordType as 'deal' | 'contact' | 'company',
+        associatedObjectId: currentRecordId,
+      });
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to log note');
+      }
+      setActionSuccess('Note logged successfully!');
+    }
+
+    // Clear success message after 3 seconds
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
@@ -435,6 +493,40 @@ export default function App() {
             Navigate to a HubSpot record to see context
           </div>
         )}
+
+        {/* Action buttons */}
+        {(deal || contact || company || context?.hubspotId) && (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={handleCreateTask}
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Create Task
+            </button>
+            <button
+              onClick={handleLogNote}
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Log Note
+            </button>
+          </div>
+        )}
+
+        {/* Success message */}
+        {actionSuccess && (
+          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-xs flex items-center gap-2">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {actionSuccess}
+          </div>
+        )}
       </header>
 
       {/* Messages */}
@@ -557,6 +649,15 @@ export default function App() {
           Enter to send, Shift+Enter for new line
         </p>
       </footer>
+
+      {/* Action Modal */}
+      <ActionModal
+        isOpen={actionModalOpen}
+        onClose={() => setActionModalOpen(false)}
+        onConfirm={handleActionConfirm}
+        type={actionType}
+        recordName={currentRecordName}
+      />
     </div>
   );
 }

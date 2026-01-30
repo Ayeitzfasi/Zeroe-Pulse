@@ -10,6 +10,7 @@ export default defineConfig({
         sidepanel: resolve(__dirname, 'src/sidepanel/index.html'),
         background: resolve(__dirname, 'src/background/index.ts'),
         content: resolve(__dirname, 'src/content/index.ts'),
+        floatingTab: resolve(__dirname, 'src/content/floatingTab.ts'),
         'web-platform': resolve(__dirname, 'src/content/web-platform.ts'),
       },
       output: {

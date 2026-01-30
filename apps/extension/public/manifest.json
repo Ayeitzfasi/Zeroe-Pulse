@@ -22,7 +22,7 @@
   "content_scripts": [
     {
       "matches": ["https://app.hubspot.com/*", "https://app-eu1.hubspot.com/*"],
-      "js": ["content.js"]
+      "js": ["content.js", "floatingTab.js"]
     },
     {
       "matches": ["http://localhost:3000/*"],

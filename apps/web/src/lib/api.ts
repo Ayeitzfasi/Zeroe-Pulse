@@ -1,4 +1,4 @@
-import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest, Deal, DealListParams, DealListResponse, DealStage, HubSpotPipeline, HubSpotConfig } from '@zeroe-pulse/shared';
+import type { ApiResponse, LoginRequest, LoginResponse, User, ChangePasswordRequest, UserApiKeys, UpdateApiKeysRequest, Deal, DealListParams, DealListResponse, DealStage, HubSpotPipeline, HubSpotConfig, Skill, SkillListParams, SkillListResponse, CreateSkillRequest, UpdateSkillRequest, ImportSkillRequest, ImportSkillResponse, ExportSkillResponse, Conversation, ConversationWithMessages, ConversationListParams, ConversationListResponse, CreateConversationRequest, SendMessageRequest, SendMessageResponse } from '@zeroe-pulse/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -171,6 +171,88 @@ class ApiClient {
 
   async deleteAllDeals(): Promise<ApiResponse<{ message: string }>> {
     return this.request<{ message: string }>('/deals', {
+      method: 'DELETE',
+    });
+  }
+
+  // Skills API
+  async getSkills(params: SkillListParams = {}): Promise<ApiResponse<SkillListResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params.includeShared !== undefined) searchParams.set('includeShared', String(params.includeShared));
+    if (params.search) searchParams.set('search', params.search);
+    if (params.category) searchParams.set('category', params.category);
+
+    const query = searchParams.toString();
+    return this.request<SkillListResponse>(`/skills${query ? `?${query}` : ''}`);
+  }
+
+  async getSkill(id: string): Promise<ApiResponse<Skill>> {
+    return this.request<Skill>(`/skills/${id}`);
+  }
+
+  async createSkill(data: CreateSkillRequest): Promise<ApiResponse<Skill>> {
+    return this.request<Skill>('/skills', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateSkill(id: string, data: UpdateSkillRequest): Promise<ApiResponse<Skill>> {
+    return this.request<Skill>(`/skills/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSkill(id: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/skills/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async importSkill(data: ImportSkillRequest): Promise<ApiResponse<ImportSkillResponse>> {
+    return this.request<ImportSkillResponse>('/skills/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async exportSkill(id: string): Promise<ApiResponse<ExportSkillResponse>> {
+    return this.request<ExportSkillResponse>(`/skills/${id}/export`);
+  }
+
+  // Conversations API
+  async getConversations(params: ConversationListParams = {}): Promise<ApiResponse<ConversationListResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params.type) searchParams.set('type', params.type);
+    if (params.dealId) searchParams.set('dealId', params.dealId);
+    if (params.limit) searchParams.set('limit', String(params.limit));
+    if (params.offset) searchParams.set('offset', String(params.offset));
+
+    const query = searchParams.toString();
+    return this.request<ConversationListResponse>(`/conversations${query ? `?${query}` : ''}`);
+  }
+
+  async getConversation(id: string): Promise<ApiResponse<ConversationWithMessages>> {
+    return this.request<ConversationWithMessages>(`/conversations/${id}`);
+  }
+
+  async createConversation(data: CreateConversationRequest): Promise<ApiResponse<Conversation>> {
+    return this.request<Conversation>('/conversations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async sendMessage(conversationId: string, data: SendMessageRequest): Promise<ApiResponse<SendMessageResponse>> {
+    return this.request<SendMessageResponse>(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteConversation(id: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/conversations/${id}`, {
       method: 'DELETE',
     });
   }

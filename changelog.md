@@ -4,6 +4,28 @@
 
 ---
 
+## [0.6.1] - 2026-01-30 (Phase 5 Enhanced - HubSpot Engagements & Skill Execution)
+
+### Added
+- **HubSpot Engagements Integration**
+  - Fetch emails, calls, meetings, notes, tasks for deal context
+  - Activity history with timestamps, subjects, and content previews
+  - Summary counts (X emails, Y calls, Z meetings, etc.)
+  - Most recent 20 activities shown in AI context
+
+- **Automatic Skill Execution**
+  - All user skills automatically loaded into conversations
+  - Claude intelligently selects and applies relevant skills
+  - Users can explicitly call skills: "run the [skill name] skill"
+  - Skill usage indicated with "📋 **Using skill: [Name]**" prefix
+
+### Changed
+- System prompts updated with SKILLS SYSTEM instructions
+- `buildSkillContext()` now provides executable instructions, not just references
+- `conversationService` automatically loads all user skills
+
+---
+
 ## [0.6.0] - 2026-01-30 (Phase 5 Complete - AI Chat Implementation)
 
 ### Added
@@ -351,6 +373,7 @@ When requesting changes, please use this format:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.6.1 | 2026-01-30 | Phase 5 Enhanced - HubSpot Engagements & Skill Execution |
 | 0.6.0 | 2026-01-30 | Phase 5 Complete - AI Chat Implementation |
 | 0.5.0 | 2026-01-30 | Phase 4 & 9 Complete - Skills CRUD & AI Skill Creation |
 | 0.4.1 | 2026-01-30 | Phase 3 Enhanced - Pipeline filtering, contacts, companies |

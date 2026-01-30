@@ -148,6 +148,13 @@
 - [x] Chat history page with filtering and pagination
 - [x] General chat page (/chat)
 - [x] Chat detail page (/chat/[id]) for continuing conversations
+- [x] **Phase 5.5 Enhancements**:
+  - [x] HubSpot engagements (emails, calls, meetings, notes, tasks)
+  - [x] Activity history in AI context with timestamps
+  - [x] Automatic skill loading into all conversations
+  - [x] Intelligent skill selection by Claude
+  - [x] Explicit skill calling ("run the [skill] skill")
+  - [x] Skill usage indication in responses
 
 ---
 
@@ -244,6 +251,13 @@
   - Chat history page with type filtering and pagination
   - General chat page (/chat) for standalone conversations
   - Chat detail page (/chat/[id]) for continuing conversations
+- ✅ **Phase 5.5 Complete** - HubSpot Engagements & Skill Execution
+  - HubSpot engagements API integration (emails, calls, meetings, notes, tasks)
+  - Activity history shown in AI context (up to 20 most recent)
+  - All user skills automatically loaded into conversations
+  - Claude intelligently selects and applies relevant skills
+  - Explicit skill calling supported ("run the [skill] skill")
+  - Skill usage indicated with 📋 prefix in responses
 - ✅ **Phase 9 Complete** - AI-Assisted Skill Creation
   - AI chat-based skill creation (no manual form)
   - Guided mode (step-by-step questions) and Freeform mode

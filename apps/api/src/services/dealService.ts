@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase.js';
 import type { Deal, DealListParams, DealListResponse, DealStage, DealContact, DealCompany, HubSpotConfig } from '@zeroe-pulse/shared';
-import type { NormalizedDeal } from '../integrations/hubspot.js';
+import type { NormalizedDeal, NormalizedEngagement } from '../integrations/hubspot.js';
+import { createHubSpotClient } from '../integrations/hubspot.js';
 
 interface DbDeal {
   id: string;
@@ -339,4 +340,19 @@ export async function saveHubSpotConfig(config: HubSpotConfig & { pipelineName?:
 
 export async function deleteAllDeals(): Promise<void> {
   await supabase.from('deals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+}
+
+// Get engagements (activities) for a deal from HubSpot
+export async function getDealEngagements(
+  hubspotId: string,
+  apiKey: string
+): Promise<NormalizedEngagement[]> {
+  try {
+    const client = createHubSpotClient(apiKey);
+    const engagements = await client.getDealEngagementsViaSearch(hubspotId);
+    return engagements;
+  } catch (error) {
+    console.error('Error fetching deal engagements:', error);
+    return [];
+  }
 }

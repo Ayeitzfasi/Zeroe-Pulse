@@ -83,6 +83,57 @@ interface HubSpotPortalInfo {
   portalId: number;
 }
 
+interface HubSpotEngagement {
+  id: string;
+  properties: {
+    hs_timestamp?: string;
+    hs_createdate?: string;
+    hs_lastmodifieddate?: string;
+    hubspot_owner_id?: string;
+    hs_body_preview?: string;
+    hs_email_subject?: string;
+    hs_email_direction?: string;
+    hs_email_status?: string;
+    hs_call_body?: string;
+    hs_call_direction?: string;
+    hs_call_duration?: string;
+    hs_call_disposition?: string;
+    hs_call_status?: string;
+    hs_meeting_title?: string;
+    hs_meeting_body?: string;
+    hs_meeting_start_time?: string;
+    hs_meeting_end_time?: string;
+    hs_meeting_outcome?: string;
+    hs_note_body?: string;
+    hs_task_body?: string;
+    hs_task_subject?: string;
+    hs_task_status?: string;
+    hs_task_priority?: string;
+    [key: string]: string | undefined;
+  };
+}
+
+interface HubSpotEngagementsResponse {
+  results: HubSpotEngagement[];
+  paging?: {
+    next?: {
+      after: string;
+    };
+  };
+}
+
+export interface NormalizedEngagement {
+  id: string;
+  type: 'email' | 'call' | 'meeting' | 'note' | 'task';
+  timestamp: string;
+  subject?: string;
+  body?: string;
+  direction?: string;
+  status?: string;
+  duration?: number;
+  outcome?: string;
+}
+
 export interface NormalizedContact {
   id: string;
   name: string;
@@ -441,6 +492,226 @@ export class HubSpotClient {
     console.log(`Found ${rawDeals.length} deals in pipeline ${pipelineId}`);
 
     return this.normalizeDeals(rawDeals);
+  }
+
+  // Fetch engagements (activities) associated with a deal
+  async getDealEngagements(dealId: string, limit = 50): Promise<NormalizedEngagement[]> {
+    const engagementTypes = ['emails', 'calls', 'meetings', 'notes', 'tasks'];
+    const allEngagements: NormalizedEngagement[] = [];
+
+    for (const engagementType of engagementTypes) {
+      try {
+        const engagements = await this.getEngagementsForDeal(dealId, engagementType, limit);
+        allEngagements.push(...engagements);
+      } catch (error) {
+        console.warn(`Failed to fetch ${engagementType} for deal ${dealId}:`, error);
+      }
+    }
+
+    // Sort by timestamp descending (most recent first)
+    allEngagements.sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    return allEngagements;
+  }
+
+  private async getEngagementsForDeal(
+    dealId: string,
+    engagementType: string,
+    limit: number
+  ): Promise<NormalizedEngagement[]> {
+    // Get properties based on engagement type
+    let properties: string[];
+    switch (engagementType) {
+      case 'emails':
+        properties = ['hs_timestamp', 'hs_email_subject', 'hs_body_preview', 'hs_email_direction', 'hs_email_status'];
+        break;
+      case 'calls':
+        properties = ['hs_timestamp', 'hs_call_body', 'hs_call_direction', 'hs_call_duration', 'hs_call_disposition', 'hs_call_status'];
+        break;
+      case 'meetings':
+        properties = ['hs_timestamp', 'hs_meeting_title', 'hs_meeting_body', 'hs_meeting_start_time', 'hs_meeting_end_time', 'hs_meeting_outcome'];
+        break;
+      case 'notes':
+        properties = ['hs_timestamp', 'hs_note_body'];
+        break;
+      case 'tasks':
+        properties = ['hs_timestamp', 'hs_task_subject', 'hs_task_body', 'hs_task_status', 'hs_task_priority'];
+        break;
+      default:
+        properties = ['hs_timestamp'];
+    }
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      properties: properties.join(','),
+    });
+
+    const response = await this.request<HubSpotEngagementsResponse>(
+      `/crm/v3/objects/${engagementType}?${params.toString()}`
+    );
+
+    // Filter to only those associated with this deal
+    // Use the associations API to get engagements linked to the deal
+    const associatedEngagements: NormalizedEngagement[] = [];
+
+    for (const engagement of response.results) {
+      // Check if this engagement is associated with the deal
+      try {
+        const associations = await this.request<{ results: Array<{ toObjectId: string }> }>(
+          `/crm/v4/objects/${engagementType}/${engagement.id}/associations/deals`
+        );
+
+        if (associations.results?.some(a => a.toObjectId === dealId)) {
+          const normalized = this.normalizeEngagement(engagement, engagementType);
+          if (normalized) {
+            associatedEngagements.push(normalized);
+          }
+        }
+      } catch {
+        // Skip if we can't check associations
+      }
+    }
+
+    return associatedEngagements;
+  }
+
+  // Alternative: Use search API to get engagements by deal association directly
+  async getDealEngagementsViaSearch(dealId: string): Promise<NormalizedEngagement[]> {
+    const engagementTypes = [
+      { type: 'emails', properties: ['hs_timestamp', 'hs_email_subject', 'hs_body_preview', 'hs_email_direction'] },
+      { type: 'calls', properties: ['hs_timestamp', 'hs_call_body', 'hs_call_direction', 'hs_call_duration', 'hs_call_disposition'] },
+      { type: 'meetings', properties: ['hs_timestamp', 'hs_meeting_title', 'hs_meeting_body', 'hs_meeting_start_time', 'hs_meeting_outcome'] },
+      { type: 'notes', properties: ['hs_timestamp', 'hs_note_body'] },
+      { type: 'tasks', properties: ['hs_timestamp', 'hs_task_subject', 'hs_task_body', 'hs_task_status'] },
+    ];
+
+    const allEngagements: NormalizedEngagement[] = [];
+
+    for (const { type, properties } of engagementTypes) {
+      try {
+        const response = await this.request<HubSpotEngagementsResponse>(
+          `/crm/v3/objects/${type}/search`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              filterGroups: [{
+                filters: [{
+                  propertyName: 'associations.deal',
+                  operator: 'EQ',
+                  value: dealId,
+                }],
+              }],
+              properties,
+              limit: 50,
+              sorts: [{ propertyName: 'hs_timestamp', direction: 'DESCENDING' }],
+            }),
+          }
+        );
+
+        for (const engagement of response.results) {
+          const normalized = this.normalizeEngagement(engagement, type);
+          if (normalized) {
+            allEngagements.push(normalized);
+          }
+        }
+      } catch (error) {
+        console.warn(`Search for ${type} failed, trying associations API:`, error);
+        // Fall back to associations approach
+        try {
+          const assocResponse = await this.request<{ results: HubSpotEngagement[] }>(
+            `/crm/v3/objects/deals/${dealId}/associations/${type}`
+          );
+
+          if (assocResponse.results) {
+            for (const assoc of assocResponse.results) {
+              // Fetch full engagement details
+              try {
+                const engagement = await this.request<HubSpotEngagement>(
+                  `/crm/v3/objects/${type}/${(assoc as any).id || (assoc as any).toObjectId}?properties=${properties.join(',')}`
+                );
+                const normalized = this.normalizeEngagement(engagement, type);
+                if (normalized) {
+                  allEngagements.push(normalized);
+                }
+              } catch {
+                // Skip individual engagement errors
+              }
+            }
+          }
+        } catch (assocError) {
+          console.warn(`Associations fallback for ${type} also failed:`, assocError);
+        }
+      }
+    }
+
+    // Sort by timestamp descending (most recent first)
+    allEngagements.sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    return allEngagements;
+  }
+
+  private normalizeEngagement(engagement: HubSpotEngagement, type: string): NormalizedEngagement | null {
+    const timestamp = engagement.properties.hs_timestamp ||
+                     engagement.properties.hs_createdate ||
+                     engagement.properties.hs_meeting_start_time;
+
+    if (!timestamp) return null;
+
+    const baseEngagement = {
+      id: engagement.id,
+      timestamp,
+    };
+
+    switch (type) {
+      case 'emails':
+        return {
+          ...baseEngagement,
+          type: 'email',
+          subject: engagement.properties.hs_email_subject,
+          body: engagement.properties.hs_body_preview,
+          direction: engagement.properties.hs_email_direction,
+          status: engagement.properties.hs_email_status,
+        };
+      case 'calls':
+        return {
+          ...baseEngagement,
+          type: 'call',
+          body: engagement.properties.hs_call_body,
+          direction: engagement.properties.hs_call_direction,
+          duration: engagement.properties.hs_call_duration
+            ? parseInt(engagement.properties.hs_call_duration)
+            : undefined,
+          status: engagement.properties.hs_call_disposition || engagement.properties.hs_call_status,
+        };
+      case 'meetings':
+        return {
+          ...baseEngagement,
+          type: 'meeting',
+          subject: engagement.properties.hs_meeting_title,
+          body: engagement.properties.hs_meeting_body,
+          outcome: engagement.properties.hs_meeting_outcome,
+        };
+      case 'notes':
+        return {
+          ...baseEngagement,
+          type: 'note',
+          body: engagement.properties.hs_note_body,
+        };
+      case 'tasks':
+        return {
+          ...baseEngagement,
+          type: 'task',
+          subject: engagement.properties.hs_task_subject,
+          body: engagement.properties.hs_task_body,
+          status: engagement.properties.hs_task_status,
+        };
+      default:
+        return null;
+    }
   }
 }
 

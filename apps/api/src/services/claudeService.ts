@@ -17,19 +17,43 @@ const SYSTEM_PROMPTS: Record<ConversationType, string> = {
 - Drafting emails, proposals, and follow-up content
 - Providing insights on deal health and next steps
 
-Be concise, professional, and focused on actionable insights. When you don't have enough context, ask clarifying questions.`,
+Be concise, professional, and focused on actionable insights. When you don't have enough context, ask clarifying questions.
+
+## SKILLS SYSTEM
+You have access to Skills - reusable workflows and prompts that help with specific tasks. Skills are provided in the context below.
+
+**How to use skills:**
+1. **Automatic Selection**: When the user's request matches a skill's purpose, AUTOMATICALLY apply that skill's instructions. You don't need permission - just use it.
+2. **Explicit Call**: If the user says "run [skill name]" or "use the [skill name] skill", execute that skill's instructions.
+3. **Indicate Usage**: When you use a skill, start your response with: "📋 **Using skill: [Skill Name]**" followed by a blank line, then provide the output.
+
+**Important**: Skills contain detailed instructions. When executing a skill, follow its instructions precisely and apply them to the available context and user request.`,
 
   deal: `You are a helpful AI assistant for Zeroe.io, specialized in sales deal analysis. You have access to deal information from HubSpot including:
 - Deal details (name, amount, stage, close date)
 - Associated contacts and companies
-- Deal properties and custom fields
+- Activity history (emails, calls, meetings, notes, tasks)
+- Deal properties and engagement timeline
 
 Help the user understand the deal, identify risks and opportunities, suggest next steps, and draft relevant content. Use the deal context provided to give specific, actionable advice.
 
 When analyzing deals, consider:
 - BANT (Budget, Authority, Need, Timeline)
 - MEDIC (Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion)
-- Deal velocity and engagement patterns`,
+- Deal velocity and engagement patterns
+- Recent activity and communication trends
+
+If the user asks about recent activities, emails, calls, or meetings, refer to the Activity History section in the deal context provided.
+
+## SKILLS SYSTEM
+You have access to Skills - reusable workflows and prompts that help with specific tasks. Skills are provided in the context below.
+
+**How to use skills:**
+1. **Automatic Selection**: When the user's request matches a skill's purpose, AUTOMATICALLY apply that skill's instructions. You don't need permission - just use it.
+2. **Explicit Call**: If the user says "run [skill name]" or "use the [skill name] skill", execute that skill's instructions.
+3. **Indicate Usage**: When you use a skill, start your response with: "📋 **Using skill: [Skill Name]**" followed by a blank line, then provide the output.
+
+**Important**: Skills contain detailed instructions. When executing a skill, follow its instructions precisely and apply them to the current deal context and user request.`,
 
   skill_creation: `You are a helpful AI assistant for creating Claude Skills. A skill is a reusable AI prompt/workflow that can be used within the Zeroe.io platform.
 
@@ -69,6 +93,18 @@ description: Description here
 This marker indicates the skill is ready to be saved to the system.`,
 };
 
+// Engagement type for context building
+interface EngagementContext {
+  type: 'email' | 'call' | 'meeting' | 'note' | 'task';
+  timestamp: string;
+  subject?: string;
+  body?: string;
+  direction?: string;
+  status?: string;
+  duration?: number;
+  outcome?: string;
+}
+
 // Build context string from deal data
 export function buildDealContext(deal: {
   name: string;
@@ -79,6 +115,7 @@ export function buildDealContext(deal: {
   companyName?: string;
   contacts?: Array<{ name: string; email: string; title?: string }>;
   properties?: Record<string, unknown>;
+  engagements?: EngagementContext[];
 }): string {
   const lines: string[] = [
     '## Deal Context',
@@ -104,23 +141,99 @@ export function buildDealContext(deal: {
     });
   }
 
+  // Add engagements/activity history
+  if (deal.engagements && deal.engagements.length > 0) {
+    lines.push('', '## Activity History (Most Recent First)');
+
+    // Group by type for summary
+    const emailCount = deal.engagements.filter(e => e.type === 'email').length;
+    const callCount = deal.engagements.filter(e => e.type === 'call').length;
+    const meetingCount = deal.engagements.filter(e => e.type === 'meeting').length;
+    const noteCount = deal.engagements.filter(e => e.type === 'note').length;
+    const taskCount = deal.engagements.filter(e => e.type === 'task').length;
+
+    lines.push(`**Summary:** ${emailCount} emails, ${callCount} calls, ${meetingCount} meetings, ${noteCount} notes, ${taskCount} tasks`);
+    lines.push('');
+
+    // Add recent activities (limit to 20 most recent)
+    const recentEngagements = deal.engagements.slice(0, 20);
+
+    for (const engagement of recentEngagements) {
+      const date = new Date(engagement.timestamp).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      let engagementLine = `**[${date}] ${engagement.type.toUpperCase()}**`;
+
+      if (engagement.direction) {
+        engagementLine += ` (${engagement.direction})`;
+      }
+      if (engagement.status) {
+        engagementLine += ` - ${engagement.status}`;
+      }
+
+      lines.push(engagementLine);
+
+      if (engagement.subject) {
+        lines.push(`Subject: ${engagement.subject}`);
+      }
+
+      if (engagement.body) {
+        // Truncate long bodies
+        const bodyPreview = engagement.body.length > 300
+          ? engagement.body.slice(0, 300) + '...'
+          : engagement.body;
+        lines.push(`Content: ${bodyPreview}`);
+      }
+
+      if (engagement.duration) {
+        lines.push(`Duration: ${Math.round(engagement.duration / 60)} minutes`);
+      }
+
+      if (engagement.outcome) {
+        lines.push(`Outcome: ${engagement.outcome}`);
+      }
+
+      lines.push(''); // Empty line between engagements
+    }
+
+    if (deal.engagements.length > 20) {
+      lines.push(`*(${deal.engagements.length - 20} older activities not shown)*`);
+    }
+  } else {
+    lines.push('', '**Activity History:** No recent activities found in HubSpot.');
+  }
+
   return lines.join('\n');
 }
 
-// Build context string from skill data
+// Build context string from skill data - skills are executable instructions
 export function buildSkillContext(skills: Array<{ name: string; description?: string; prompt: string }>): string {
   if (skills.length === 0) return '';
 
-  const lines: string[] = ['## Available Skills for Reference'];
+  const lines: string[] = [
+    '## Available Skills',
+    '',
+    'The following skills are available. Use them when relevant to the user\'s request:',
+    '',
+  ];
 
-  skills.forEach(skill => {
-    lines.push(`### ${skill.name}`);
+  skills.forEach((skill, index) => {
+    lines.push(`### Skill ${index + 1}: ${skill.name}`);
     if (skill.description) {
-      lines.push(skill.description);
+      lines.push(`**Purpose:** ${skill.description}`);
     }
-    lines.push('```');
-    lines.push(skill.prompt.slice(0, 500) + (skill.prompt.length > 500 ? '...' : ''));
-    lines.push('```');
+    lines.push('');
+    lines.push('**Instructions to follow when this skill is activated:**');
+    lines.push('');
+    // Include the full skill prompt - this is the executable instructions
+    lines.push(skill.prompt);
+    lines.push('');
+    lines.push('---');
     lines.push('');
   });
 

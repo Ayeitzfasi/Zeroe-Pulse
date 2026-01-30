@@ -218,6 +218,37 @@ export async function sendMessage(
     try {
       const deal = await dealService.findById(conversation.dealId);
       if (deal) {
+        // Try to fetch engagements if user has HubSpot API key
+        let engagements: Array<{
+          type: 'email' | 'call' | 'meeting' | 'note' | 'task';
+          timestamp: string;
+          subject?: string;
+          body?: string;
+          direction?: string;
+          status?: string;
+          duration?: number;
+          outcome?: string;
+        }> = [];
+
+        try {
+          // Get user's HubSpot API key
+          const { data: userData } = await supabase
+            .from('users')
+            .select('hubspot_token')
+            .eq('id', userId)
+            .single();
+
+          const hubspotApiKey = userData?.hubspot_token || process.env.HUBSPOT_API_KEY;
+
+          if (hubspotApiKey && deal.hubspotId) {
+            console.log(`Fetching engagements for deal ${deal.hubspotId}...`);
+            engagements = await dealService.getDealEngagements(deal.hubspotId, hubspotApiKey);
+            console.log(`Found ${engagements.length} engagements`);
+          }
+        } catch (engagementError) {
+          console.warn('Failed to fetch engagements:', engagementError);
+        }
+
         context += claudeService.buildDealContext({
           name: deal.name,
           amount: deal.amount,
@@ -230,6 +261,7 @@ export async function sendMessage(
             email: c.email || '',
             title: c.jobTitle || undefined,
           })),
+          engagements,
         });
       }
     } catch (e) {
@@ -237,25 +269,22 @@ export async function sendMessage(
     }
   }
 
-  // Add skill context if requested
-  if (data.includeContext?.skills && data.includeContext.skills.length > 0) {
-    try {
-      const skillsData = await Promise.all(
-        data.includeContext.skills.map(id => skillService.findById(id, userId))
+  // Always load ALL user skills into context for intelligent skill selection
+  // Claude will automatically choose relevant skills based on the user's request
+  try {
+    const allSkills = await skillService.findAll(userId, { limit: 50 });
+    if (allSkills.skills.length > 0) {
+      console.log(`Loading ${allSkills.skills.length} skills into context for user ${userId}`);
+      context += '\n\n' + claudeService.buildSkillContext(
+        allSkills.skills.map(s => ({
+          name: s.name,
+          description: s.description || undefined,
+          prompt: s.prompt,
+        }))
       );
-      const validSkills = skillsData.filter(s => s !== null) as NonNullable<typeof skillsData[0]>[];
-      if (validSkills.length > 0) {
-        context += '\n\n' + claudeService.buildSkillContext(
-          validSkills.map(s => ({
-            name: s.name,
-            description: s.description || undefined,
-            prompt: s.prompt,
-          }))
-        );
-      }
-    } catch (e) {
-      console.warn('Failed to load skill context:', e);
     }
+  } catch (e) {
+    console.warn('Failed to load skills context:', e);
   }
 
   // Get AI response

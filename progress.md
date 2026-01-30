@@ -217,6 +217,12 @@
 - [ ] Performance optimization
 - [ ] Security audit
 - [ ] Documentation finalization
+- [ ] **Pre-Deployment: Remove .env API key fallbacks**
+  - [ ] HubSpot: Remove `process.env.HUBSPOT_API_KEY` fallback - require user's own key
+  - [ ] Anthropic: Implement per-user API key, remove shared `.env` key
+  - [ ] Confluence: Require user's own key (no fallback)
+  - [ ] Show clear error messages when API keys are missing
+  - [ ] Update Settings page to indicate required keys
 
 ---
 

@@ -4,6 +4,96 @@
 
 ---
 
+## [0.6.0] - 2026-01-30 (Phase 5 Complete - AI Chat Implementation)
+
+### Added
+- **Claude API Integration**
+  - `claudeService.ts` - Claude API client with Anthropic SDK
+  - System prompts for different conversation types (general, deal, skill_creation)
+  - Deal context building for AI conversations
+  - Skill context building for AI conversations
+  - Title generation from first message
+
+- **Conversations API**
+  - `GET /conversations` - List with type/deal filtering and pagination
+  - `POST /conversations` - Create new conversation
+  - `GET /conversations/:id` - Get conversation with messages
+  - `POST /conversations/:id/messages` - Send message and get AI response
+  - `DELETE /conversations/:id` - Delete conversation
+  - Database migration 007_conversations.sql
+
+- **Chat Components**
+  - `ChatPanel.tsx` - Reusable chat component with markdown rendering
+  - ReactMarkdown with remark-gfm for message formatting
+  - Typing indicators and loading states
+  - Auto-scroll to latest messages
+  - `<skill_ready>` tag cleaning for display
+
+- **Deal Page Chat**
+  - Expandable AI chat panel on deal detail page
+  - Deal context automatically included in AI responses
+  - Persists conversation across sessions
+
+- **Chat History Page** (`/history`)
+  - Lists all conversations with filtering (All, General, Deal, Skill Creation)
+  - Relative timestamps (e.g., "5m ago", "2h ago")
+  - Delete conversations with confirmation
+  - Pagination for large lists
+
+- **General Chat** (`/chat`, `/chat/[id]`)
+  - Standalone chat page for general conversations
+  - Chat detail page for continuing existing conversations
+  - URL updates after first message
+
+---
+
+## [0.5.0] - 2026-01-30 (Phase 4 & 9 Complete - Skills & AI Skill Creation)
+
+### Added
+- **Skills Database**
+  - `005_skills.sql` - Skills table with prompt, description, is_shared fields
+  - `006_skills_source.sql` - Source tracking (manual, import, ai_generated, extension)
+
+- **Skills API**
+  - `GET /skills` - List skills with pagination
+  - `POST /skills` - Create skill
+  - `PUT /skills/:id` - Update skill
+  - `DELETE /skills/:id` - Delete skill
+  - `POST /skills/import` - Import .skill file (ZIP with SKILL.md)
+  - `GET /skills/:id/export` - Export skill as .skill file
+
+- **Skills List Page** (`/skills`)
+  - Grid layout with skill cards
+  - Source badges (Manual, Import, AI Generated)
+  - Drag & drop import zone
+  - File picker for .skill import
+  - Search and visibility filtering
+
+- **Skill Detail Page** (`/skills/[id]`)
+  - Markdown viewer with remark-gfm
+  - Rendered/Raw toggle for viewing
+  - Export as .skill file button
+  - Edit and delete actions
+
+- **AI Skill Creation** (`/skills/new`)
+  - AI chat-based skill creation (no manual form)
+  - Guided mode with step-by-step questions
+  - Freeform mode for open iteration
+  - `<skill_ready>` tag extraction
+  - Preview panel with rendered markdown
+  - Floating save button
+
+- **.skill File Format Support**
+  - ZIP archive containing `{skill-name}/SKILL.md`
+  - YAML frontmatter parsing (name, version, description)
+  - Import from meeting-processor.skill format
+  - Export generates compatible ZIP
+
+### Changed
+- Tailwind config updated with typography plugin for prose styling
+
+---
+
 ## [0.4.1] - 2026-01-30 (Phase 3 Enhanced - Deals Improvements)
 
 ### Added
@@ -261,6 +351,8 @@ When requesting changes, please use this format:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.6.0 | 2026-01-30 | Phase 5 Complete - AI Chat Implementation |
+| 0.5.0 | 2026-01-30 | Phase 4 & 9 Complete - Skills CRUD & AI Skill Creation |
 | 0.4.1 | 2026-01-30 | Phase 3 Enhanced - Pipeline filtering, contacts, companies |
 | 0.4.0 | 2026-01-30 | Phase 3 Complete - Deals Feature with HubSpot Integration |
 | 0.3.0 | 2026-01-30 | Phase 2 Complete + API Keys Management |

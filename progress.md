@@ -4,9 +4,9 @@
 
 ---
 
-## Current Status: **Phase 3 Complete**
+## Current Status: **Phase 5 Complete**
 
-### Active Phase: Phase 4 - Skills CRUD (Not Started)
+### Active Phase: Phase 6 - Chrome Extension (Not Started)
 
 ---
 
@@ -18,12 +18,12 @@
 | 1 | Authentication System | ✅ Complete | 100% |
 | 2 | Platform Layout & Navigation | ✅ Complete | 100% |
 | 3 | Deals Feature (Basic) | ✅ Complete | 100% |
-| 4 | Skills CRUD | ⏳ Not Started | 0% |
-| 5 | AI Chat Implementation | ⏳ Not Started | 0% |
+| 4 | Skills CRUD | ✅ Complete | 100% |
+| 5 | AI Chat Implementation | ✅ Complete | 100% |
 | 6 | Chrome Extension | ⏳ Not Started | 0% |
 | 7 | Integrations (Confluence + Transcripts) | ⏳ Not Started | 0% |
 | 8 | Deal Analysis (AI Generation) | ⏳ Not Started | 0% |
-| 9 | AI-Assisted Skill Creation | ⏳ Not Started | 0% |
+| 9 | AI-Assisted Skill Creation | ✅ Complete | 100% |
 | 10 | Polish & Production | ⏳ Not Started | 0% |
 
 **Legend**: ⏳ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
@@ -111,34 +111,43 @@
 
 ---
 
-### Phase 4: Skills CRUD
+### Phase 4: Skills CRUD ✅
 
-- [ ] Create skills table migration
-- [ ] `GET /skills` endpoint
-- [ ] `POST /skills` endpoint
-- [ ] `PUT /skills/:id` endpoint
-- [ ] `DELETE /skills/:id` endpoint
-- [ ] Skills list page with grid/cards
-- [ ] Skill detail/edit page
-- [ ] New skill page (form-based)
-- [ ] Private/shared toggle
-- [ ] Delete confirmation modal
+- [x] Create skills table migration (005_skills.sql, 006_skills_source.sql)
+- [x] `GET /skills` endpoint
+- [x] `POST /skills` endpoint
+- [x] `PUT /skills/:id` endpoint
+- [x] `DELETE /skills/:id` endpoint
+- [x] Skills list page with grid/cards
+- [x] Skill detail/edit page with markdown viewer
+- [x] New skill page (AI chat-based, not form-based)
+- [x] Private/shared toggle
+- [x] Delete confirmation modal
+- [x] **Phase 4.5 Enhancements**:
+  - [x] .skill file import (drag & drop + file picker)
+  - [x] .skill file export (ZIP with SKILL.md)
+  - [x] Source tracking (manual, import, ai_generated, extension)
+  - [x] Rendered/raw markdown toggle on skill detail page
+  - [x] Source badges on skill cards
 
 ---
 
-### Phase 5: AI Chat Implementation
+### Phase 5: AI Chat Implementation ✅
 
-- [ ] Create conversations/messages tables
-- [ ] Claude API integration service
-- [ ] `GET /conversations` endpoint
-- [ ] `POST /conversations` endpoint
-- [ ] `POST /conversations/:id/messages` endpoint
-- [ ] Context assembly service (HubSpot data)
-- [ ] Reusable Chat UI component
-- [ ] Message rendering with markdown
-- [ ] Loading/typing indicators
-- [ ] Chat integrated into deal detail page
-- [ ] Chat history page
+- [x] Create conversations/messages tables (007_conversations.sql)
+- [x] Claude API integration service (claudeService.ts)
+- [x] `GET /conversations` endpoint with filtering
+- [x] `POST /conversations` endpoint
+- [x] `POST /conversations/:id/messages` endpoint
+- [x] `DELETE /conversations/:id` endpoint
+- [x] Context assembly service (deal context from HubSpot)
+- [x] Reusable Chat UI component (ChatPanel.tsx)
+- [x] Message rendering with markdown (ReactMarkdown + remark-gfm)
+- [x] Loading/typing indicators
+- [x] Chat integrated into deal detail page (expandable)
+- [x] Chat history page with filtering and pagination
+- [x] General chat page (/chat)
+- [x] Chat detail page (/chat/[id]) for continuing conversations
 
 ---
 
@@ -181,12 +190,13 @@
 
 ---
 
-### Phase 9: AI-Assisted Skill Creation
+### Phase 9: AI-Assisted Skill Creation ✅
 
-- [ ] Skill creation conversation flow
-- [ ] New skill page with AI chat panel
-- [ ] "Apply suggestion" functionality
-- [ ] Skill editing with AI assistance
+- [x] Skill creation conversation flow (guided + freeform modes)
+- [x] New skill page with AI chat panel
+- [x] `<skill_ready>` tag extraction for skill preview
+- [x] Preview panel with save functionality
+- [x] System prompts for skill creation guidance
 
 ---
 
@@ -216,6 +226,30 @@
 ---
 
 ## Session Log
+
+### January 30, 2026 (Session 6)
+- ✅ **Phase 4 Complete** - Skills CRUD
+  - Skills list page with grid cards and source badges
+  - Skill detail page with markdown viewer (rendered/raw toggle)
+  - .skill file import via drag & drop and file picker
+  - .skill file export as ZIP with SKILL.md
+  - Source tracking (manual, import, ai_generated, extension)
+  - Delete confirmation modal
+- ✅ **Phase 4.5 Complete** - Enhanced Skills with Import/Export
+- ✅ **Phase 5 Complete** - AI Chat Implementation
+  - Claude API integration with system prompts per conversation type
+  - Conversations and messages API with full CRUD
+  - Reusable ChatPanel component with markdown rendering
+  - Deal page AI chat (expandable panel with deal context)
+  - Chat history page with type filtering and pagination
+  - General chat page (/chat) for standalone conversations
+  - Chat detail page (/chat/[id]) for continuing conversations
+- ✅ **Phase 9 Complete** - AI-Assisted Skill Creation
+  - AI chat-based skill creation (no manual form)
+  - Guided mode (step-by-step questions) and Freeform mode
+  - `<skill_ready>` tag extraction for skill preview
+  - Preview panel with rendered markdown and save button
+- **Next**: Phase 6 - Chrome Extension
 
 ### January 30, 2026 (Session 5)
 - ✅ **Phase 3 Enhanced** - Deals Feature Improvements

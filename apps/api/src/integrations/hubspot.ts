@@ -191,7 +191,9 @@ export class HubSpotClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(`HubSpot API error: ${response.status} - ${error.message || 'Unknown error'}`);
+      const errorMessage = error.message || error.errors?.[0]?.message || JSON.stringify(error) || 'Unknown error';
+      console.error('HubSpot API Error:', { status: response.status, error, endpoint });
+      throw new Error(`HubSpot API error: ${response.status} - ${errorMessage}`);
     }
 
     return response.json();
@@ -398,6 +400,7 @@ export class HubSpotClient {
       hs_task_subject: data.subject,
       hs_task_status: 'NOT_STARTED',
       hs_task_priority: priorityMap[data.priority || 'MEDIUM'],
+      hs_task_type: 'TODO',
     };
 
     if (data.body) {
@@ -405,29 +408,46 @@ export class HubSpotClient {
     }
 
     if (data.dueDate) {
+      // HubSpot expects timestamp in milliseconds
       taskData.hs_timestamp = new Date(data.dueDate).getTime().toString();
+    } else {
+      // Default to now if no due date
+      taskData.hs_timestamp = Date.now().toString();
     }
 
-    const response = await this.request<{ id: string }>(
-      '/crm/v3/objects/tasks',
-      {
-        method: 'POST',
-        body: JSON.stringify({ properties: taskData }),
-      }
-    );
+    // Association type IDs for tasks (from HubSpot docs)
+    // Task to Contact: 204, Task to Company: 192, Task to Deal: 216
+    const associationTypeIds: Record<string, number> = {
+      contact: 204,
+      company: 192,
+      deal: 216,
+    };
 
-    // Associate task with the object
     const objectTypeMap: Record<string, string> = {
       deal: 'deals',
       contact: 'contacts',
       company: 'companies',
     };
 
-    await this.request(
-      `/crm/v4/objects/tasks/${response.id}/associations/${objectTypeMap[data.associatedObjectType]}/${data.associatedObjectId}`,
+    // Create task with association in one request
+    const response = await this.request<{ id: string }>(
+      '/crm/v3/objects/tasks',
       {
-        method: 'PUT',
-        body: JSON.stringify([{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 204 }]),
+        method: 'POST',
+        body: JSON.stringify({
+          properties: taskData,
+          associations: [
+            {
+              to: { id: data.associatedObjectId },
+              types: [
+                {
+                  associationCategory: 'HUBSPOT_DEFINED',
+                  associationTypeId: associationTypeIds[data.associatedObjectType],
+                },
+              ],
+            },
+          ],
+        }),
       }
     );
 
@@ -442,29 +462,36 @@ export class HubSpotClient {
   }): Promise<string> {
     const noteData = {
       hs_note_body: data.body,
-      hs_timestamp: new Date().getTime().toString(),
+      hs_timestamp: Date.now().toString(),
     };
 
+    // Association type IDs for notes (from HubSpot docs)
+    // Note to Contact: 202, Note to Company: 190, Note to Deal: 214
+    const associationTypeIds: Record<string, number> = {
+      contact: 202,
+      company: 190,
+      deal: 214,
+    };
+
+    // Create note with association in one request
     const response = await this.request<{ id: string }>(
       '/crm/v3/objects/notes',
       {
         method: 'POST',
-        body: JSON.stringify({ properties: noteData }),
-      }
-    );
-
-    // Associate note with the object
-    const objectTypeMap: Record<string, string> = {
-      deal: 'deals',
-      contact: 'contacts',
-      company: 'companies',
-    };
-
-    await this.request(
-      `/crm/v4/objects/notes/${response.id}/associations/${objectTypeMap[data.associatedObjectType]}/${data.associatedObjectId}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify([{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 190 }]),
+        body: JSON.stringify({
+          properties: noteData,
+          associations: [
+            {
+              to: { id: data.associatedObjectId },
+              types: [
+                {
+                  associationCategory: 'HUBSPOT_DEFINED',
+                  associationTypeId: associationTypeIds[data.associatedObjectType],
+                },
+              ],
+            },
+          ],
+        }),
       }
     );
 

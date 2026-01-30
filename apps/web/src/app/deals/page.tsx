@@ -596,9 +596,6 @@ export default function DealsPage() {
                         Company
                       </th>
                       <th className="text-left px-4 py-3 text-sm font-medium text-charcoal">
-                        Pipeline
-                      </th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-charcoal">
                         Stage
                       </th>
                       <th
@@ -631,9 +628,6 @@ export default function DealsPage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-charcoal">
                           {deal.companyName || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-blue">
-                          {deal.pipelineName || '-'}
                         </td>
                         <td className="px-4 py-3">
                           <span

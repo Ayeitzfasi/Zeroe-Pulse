@@ -2,15 +2,18 @@
   "manifest_version": 3,
   "name": "Zeroe Pulse AI",
   "description": "AI-powered sales intelligence for HubSpot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "permissions": [
     "storage",
     "sidePanel",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "https://app.hubspot.com/*",
-    "http://localhost:3000/*"
+    "https://app-eu1.hubspot.com/*",
+    "http://localhost:3000/*",
+    "http://localhost:3001/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -18,7 +21,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://app.hubspot.com/*"],
+      "matches": ["https://app.hubspot.com/*", "https://app-eu1.hubspot.com/*"],
       "js": ["content.js"]
     },
     {

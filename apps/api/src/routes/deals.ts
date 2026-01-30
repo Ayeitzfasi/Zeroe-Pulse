@@ -157,6 +157,25 @@ router.get('/pipelines', authenticate, async (req: AuthenticatedRequest, res, ne
   }
 });
 
+// GET /deals/hubspot/:hubspotId - Get deal by HubSpot ID
+router.get('/hubspot/:hubspotId', authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { hubspotId } = req.params;
+    const deal = await dealService.findByHubspotId(hubspotId);
+
+    if (!deal) {
+      throw new AppError(404, 'DEAL_NOT_FOUND', 'Deal not found');
+    }
+
+    res.json({
+      success: true,
+      data: { deal },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /deals/:id - Get single deal
 router.get('/:id', authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {

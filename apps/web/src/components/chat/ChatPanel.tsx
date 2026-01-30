@@ -49,6 +49,9 @@ export function ChatPanel({
   const [error, setError] = useState('');
   const [currentConversationId, setCurrentConversationId] = useState(conversationId);
 
+  // Abort controller for canceling requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -67,6 +70,15 @@ export function ChatPanel({
     setCurrentConversationId(conversationId);
   }, [conversationId]);
 
+  // Cancel any ongoing request
+  const cancelRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+    }
+  };
+
   // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -81,6 +93,9 @@ export function ChatPanel({
     setInput('');
     setError('');
     setIsLoading(true);
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
 
     // Reset textarea height
     if (inputRef.current) {
@@ -117,8 +132,8 @@ export function ChatPanel({
       };
       setMessages(prev => [...prev, optimisticUserMessage]);
 
-      // Send message
-      const result = await api.sendMessage(convId, { content: messageContent });
+      // Send message with abort signal
+      const result = await api.sendMessage(convId, { content: messageContent }, abortControllerRef.current.signal);
 
       if (!result.success || !result.data) {
         // Remove optimistic message on error
@@ -138,9 +153,16 @@ export function ChatPanel({
         onSkillGenerated?.(result.data.generatedSkill);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Request was cancelled - remove optimistic message
+        setMessages(prev => prev.filter(m => !m.id.startsWith('temp-')));
+        setError('Request cancelled');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -180,14 +202,14 @@ export function ChatPanel({
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-lg px-4 py-2 ${
+              className={`max-w-[85%] rounded-lg px-4 py-3 ${
                 message.role === 'user'
                   ? 'bg-zeroe-blue text-white'
                   : 'bg-slate-100 text-charcoal'
               }`}
             >
               {message.role === 'assistant' ? (
-                <div className="prose prose-sm prose-slate max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-pre:my-2 prose-code:text-zeroe-blue prose-code:bg-slate-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-800 prose-pre:text-slate-100">
+                <div className="markdown-content">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {cleanMessageContent(message.content)}
                   </ReactMarkdown>
@@ -219,8 +241,13 @@ export function ChatPanel({
 
       {/* Error */}
       {error && (
-        <div className="mx-4 mb-2 p-2 bg-coral/10 border border-coral/20 rounded-lg text-coral text-sm">
-          {error}
+        <div className="mx-4 mb-2 p-2 bg-coral/10 border border-coral/20 rounded-lg text-coral text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="text-coral hover:text-coral/80">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -238,22 +265,27 @@ export function ChatPanel({
             className="flex-1 resize-none input text-sm"
             style={{ minHeight: '40px', maxHeight: '150px' }}
           />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
-            className="btn-primary px-4 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          {isLoading ? (
+            <button
+              onClick={cancelRequest}
+              className="btn-danger px-4"
+              title="Stop generating"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            ) : (
+            </button>
+          ) : (
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim()}
+              className="btn-primary px-4 disabled:opacity-50"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-            )}
-          </button>
+            </button>
+          )}
         </div>
         <p className="text-xs text-slate-400 mt-2">
           Press Enter to send, Shift+Enter for new line

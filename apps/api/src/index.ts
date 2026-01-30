@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js';
 import dealsRoutes from './routes/deals.js';
 import skillsRoutes from './routes/skills.js';
 import conversationsRoutes from './routes/conversations.js';
+import hubspotRoutes from './routes/hubspot.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/auth', authRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/skills', skillsRoutes);
 app.use('/conversations', conversationsRoutes);
+app.use('/hubspot', hubspotRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -26,7 +26,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    signal?: AbortSignal
   ): Promise<ApiResponse<T>> {
     const token = this.getToken();
     const headers: HeadersInit = {
@@ -41,6 +42,7 @@ class ApiClient {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
+      signal,
     });
 
     const data = await response.json();
@@ -244,11 +246,15 @@ class ApiClient {
     });
   }
 
-  async sendMessage(conversationId: string, data: SendMessageRequest): Promise<ApiResponse<SendMessageResponse>> {
-    return this.request<SendMessageResponse>(`/conversations/${conversationId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  async sendMessage(conversationId: string, data: SendMessageRequest, signal?: AbortSignal): Promise<ApiResponse<SendMessageResponse>> {
+    return this.request<SendMessageResponse>(
+      `/conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      signal
+    );
   }
 
   async deleteConversation(id: string): Promise<ApiResponse<{ message: string }>> {

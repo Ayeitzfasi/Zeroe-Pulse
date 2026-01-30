@@ -322,24 +322,153 @@ export class HubSpotClient {
     return allDeals;
   }
 
-  async getCompany(companyId: string): Promise<HubSpotCompany | null> {
+  async getCompany(companyId: string): Promise<HubSpotCompany & { associatedDealIds?: string[] } | null> {
     try {
-      return await this.request<HubSpotCompany>(
-        `/crm/v3/objects/companies/${companyId}?properties=name,domain`
+      const company = await this.request<HubSpotCompany>(
+        `/crm/v3/objects/companies/${companyId}?properties=name,domain,industry,city,country&associations=deals`
       );
+
+      // Get associated deal IDs
+      const associatedDealIds: string[] = [];
+      try {
+        const associations = await this.request<{ results: Array<{ toObjectId: string }> }>(
+          `/crm/v4/objects/companies/${companyId}/associations/deals`
+        );
+        if (associations.results) {
+          associatedDealIds.push(...associations.results.map(a => a.toObjectId));
+        }
+      } catch {
+        // Ignore association errors
+      }
+
+      return {
+        ...company,
+        associatedDealIds,
+      };
     } catch {
       return null;
     }
   }
 
-  async getContact(contactId: string): Promise<HubSpotContact | null> {
+  async getContact(contactId: string): Promise<HubSpotContact & { associatedDealIds?: string[] } | null> {
     try {
-      return await this.request<HubSpotContact>(
-        `/crm/v3/objects/contacts/${contactId}?properties=firstname,lastname,email,jobtitle`
+      const contact = await this.request<HubSpotContact>(
+        `/crm/v3/objects/contacts/${contactId}?properties=firstname,lastname,email,jobtitle,phone,company`
       );
+
+      // Get associated deal IDs
+      const associatedDealIds: string[] = [];
+      try {
+        const associations = await this.request<{ results: Array<{ toObjectId: string }> }>(
+          `/crm/v4/objects/contacts/${contactId}/associations/deals`
+        );
+        if (associations.results) {
+          associatedDealIds.push(...associations.results.map(a => a.toObjectId));
+        }
+      } catch {
+        // Ignore association errors
+      }
+
+      return {
+        ...contact,
+        associatedDealIds,
+      };
     } catch {
       return null;
     }
+  }
+
+  // Create a task in HubSpot
+  async createTask(data: {
+    subject: string;
+    body?: string;
+    dueDate?: string;
+    priority?: 'LOW' | 'MEDIUM' | 'HIGH';
+    associatedObjectType: 'deal' | 'contact' | 'company';
+    associatedObjectId: string;
+  }): Promise<string> {
+    // Map priority to HubSpot values
+    const priorityMap: Record<string, string> = {
+      LOW: 'LOW',
+      MEDIUM: 'MEDIUM',
+      HIGH: 'HIGH',
+    };
+
+    const taskData: Record<string, string> = {
+      hs_task_subject: data.subject,
+      hs_task_status: 'NOT_STARTED',
+      hs_task_priority: priorityMap[data.priority || 'MEDIUM'],
+    };
+
+    if (data.body) {
+      taskData.hs_task_body = data.body;
+    }
+
+    if (data.dueDate) {
+      taskData.hs_timestamp = new Date(data.dueDate).getTime().toString();
+    }
+
+    const response = await this.request<{ id: string }>(
+      '/crm/v3/objects/tasks',
+      {
+        method: 'POST',
+        body: JSON.stringify({ properties: taskData }),
+      }
+    );
+
+    // Associate task with the object
+    const objectTypeMap: Record<string, string> = {
+      deal: 'deals',
+      contact: 'contacts',
+      company: 'companies',
+    };
+
+    await this.request(
+      `/crm/v4/objects/tasks/${response.id}/associations/${objectTypeMap[data.associatedObjectType]}/${data.associatedObjectId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify([{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 204 }]),
+      }
+    );
+
+    return response.id;
+  }
+
+  // Create a note in HubSpot
+  async createNote(data: {
+    body: string;
+    associatedObjectType: 'deal' | 'contact' | 'company';
+    associatedObjectId: string;
+  }): Promise<string> {
+    const noteData = {
+      hs_note_body: data.body,
+      hs_timestamp: new Date().getTime().toString(),
+    };
+
+    const response = await this.request<{ id: string }>(
+      '/crm/v3/objects/notes',
+      {
+        method: 'POST',
+        body: JSON.stringify({ properties: noteData }),
+      }
+    );
+
+    // Associate note with the object
+    const objectTypeMap: Record<string, string> = {
+      deal: 'deals',
+      contact: 'contacts',
+      company: 'companies',
+    };
+
+    await this.request(
+      `/crm/v4/objects/notes/${response.id}/associations/${objectTypeMap[data.associatedObjectType]}/${data.associatedObjectId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify([{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 190 }]),
+      }
+    );
+
+    return response.id;
   }
 
   async getOwner(ownerId: string): Promise<HubSpotOwner | null> {

@@ -272,7 +272,7 @@ export async function sendMessage(
   // Always load ALL user skills into context for intelligent skill selection
   // Claude will automatically choose relevant skills based on the user's request
   try {
-    const allSkills = await skillService.findAll(userId, { limit: 50 });
+    const allSkills = await skillService.findAll(userId, {});
     if (allSkills.skills.length > 0) {
       console.log(`Loading ${allSkills.skills.length} skills into context for user ${userId}`);
       context += '\n\n' + claudeService.buildSkillContext(
